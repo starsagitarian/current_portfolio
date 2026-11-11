@@ -38,7 +38,30 @@ the schema or visitor messages.
 Rules live in the database as well as the code: slug formats, date order, one profile row,
 case-insensitive technology names and message length are all `CHECK` constraints or unique indexes.
 
-## Getting started
+## Run it with Docker
+
+Requirements: Docker with Compose v2. One command builds both images and starts the stack:
+
+```bash
+docker compose up --build
+```
+
+- Web: http://localhost:3000
+- API: http://localhost:4000/health?deep=1
+
+Compose starts PostgreSQL 17, waits for it to be healthy, runs a one-off `migrate` job (migrations
+and seed content, safe to re-run), then the API, then the web app. Both app images run as a non-root
+user on plain Alpine with only the Node.js binary added (about 60 MB to download each). The API
+container has a read-only filesystem, and every app container drops all Linux capabilities.
+
+| Variable                                            | Default     | Use                        |
+| --------------------------------------------------- | ----------- | -------------------------- |
+| `WEB_PORT` / `API_PORT`                             | 3000 / 4000 | Host ports, if those clash |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | `portfolio` | Local database credentials |
+
+`docker compose down` stops everything and keeps the data; add `-v` to delete it as well.
+
+## Getting started (development)
 
 Requirements: Node.js 24 (see `.nvmrc`), npm 11 and Docker.
 
@@ -54,6 +77,9 @@ npm run dev
 
 - Web: http://localhost:3000
 - API: http://localhost:4000/health (add `?deep=1` to check the database too)
+
+If port 5432 is already taken by a local PostgreSQL, publish the container on another port
+(`-p 5433:5432`) and change the port in `DATABASE_URL` in `.env` to match.
 
 ## Scripts
 
