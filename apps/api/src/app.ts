@@ -3,17 +3,23 @@ import express, { type Express } from "express";
 import helmet from "helmet";
 import { pino } from "pino";
 import { pinoHttp } from "pino-http";
+import type { Sequelize } from "sequelize";
 import { loadConfig, type Config } from "./config";
 import { errorHandler, notFound } from "./errors";
 import { healthRouter } from "./routes/health";
 
 const REQUEST_ID_HEADER = "x-request-id";
 
+export interface AppDependencies {
+  /** The database connection, when DATABASE_URL is set. */
+  sequelize?: Sequelize | undefined;
+}
+
 /**
  * Builds the Express application without starting a server,
  * so tests and serverless hosts can use it directly.
  */
-export function createApp(config: Config = loadConfig()): Express {
+export function createApp(config: Config = loadConfig(), deps: AppDependencies = {}): Express {
   const logger = pino({
     level: config.NODE_ENV === "test" ? "silent" : config.LOG_LEVEL,
     redact: ["req.headers.authorization", "req.headers.cookie"],
@@ -38,7 +44,12 @@ export function createApp(config: Config = loadConfig()): Express {
   app.use(helmet());
   app.use(express.json({ limit: "16kb" }));
 
-  app.use(healthRouter(config));
+  const { sequelize } = deps;
+  app.use(
+    healthRouter(config, {
+      checkDatabase: sequelize ? () => sequelize.authenticate({ logging: false }) : undefined,
+    }),
+  );
 
   app.use(notFound);
   app.use(errorHandler);

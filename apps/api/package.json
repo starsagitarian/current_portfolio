@@ -9,18 +9,32 @@
     "dev": "tsx watch --clear-screen=false --env-file-if-exists=../../.env src/server.ts",
     "build": "tsup",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db": "tsx --env-file-if-exists=../../.env src/db/cli.ts",
+    "db:migrate": "npm run db -- migrate",
+    "db:rollback": "npm run db -- rollback",
+    "db:status": "npm run db -- status",
+    "db:seed": "npm run db -- seed",
+    "db:unseed": "npm run db -- unseed",
+    "db:reset": "npm run db -- reset",
+    "db:migrate:dist": "node dist/db-cli.js migrate"
   },
   "dependencies": {
     "@starsagitarian/shared": "*",
     "express": "^5.3.0",
     "helmet": "^8.3.0",
+    "pg": "^8.23.1",
+    "pg-hstore": "^2.3.4",
     "pino": "^10.4.0",
     "pino-http": "^11.0.0",
+    "sequelize": "^6.37.8",
+    "umzug": "^3.8.3",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@testcontainers/postgresql": "^12.2.1",
     "@types/express": "^5.0.6",
+    "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",
     "supertest": "^7.3.2",
     "tsup": "^9.0.0",

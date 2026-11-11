@@ -1,7 +1,12 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/server.ts", "src/app.ts"],
+  entry: {
+    server: "src/server.ts",
+    app: "src/app.ts",
+    // Migrations and seeds for deploy pipelines, without needing tsx in production.
+    "db-cli": "src/db/cli.ts",
+  },
   format: ["esm"],
   platform: "node",
   target: "node24",

@@ -10,43 +10,72 @@ TypeScript REST API over PostgreSQL.
 
 ## Architecture
 
-| Part              | What it is                                                         |
-| ----------------- | ------------------------------------------------------------------ |
-| `apps/web`        | Next.js (App Router), React, Tailwind CSS                          |
-| `apps/api`        | Express 5 REST API in TypeScript; Sequelize and PostgreSQL to come |
-| `packages/shared` | Zod schemas and types used by both apps                            |
-| `tests/e2e`       | Playwright tests at phone, tablet and desktop widths               |
+| Part              | What it is                                                 |
+| ----------------- | ---------------------------------------------------------- |
+| `apps/web`        | Next.js (App Router), React, Tailwind CSS                  |
+| `apps/api`        | Express 5 REST API in TypeScript, Sequelize, PostgreSQL 17 |
+| `packages/shared` | Zod schemas and types used by both apps                    |
+| `tests/e2e`       | Playwright tests at phone, tablet and desktop widths       |
 
 Pages are pre-rendered and served from a CDN; the API owns all data and answers in JSON, with
 errors in the RFC 9457 `application/problem+json` format.
 
+### Database
+
+Schema changes are versioned migrations (Umzug), each applied in its own transaction and fully
+reversible. Portfolio content is loaded by a separate seeder, so it can be reloaded without touching
+the schema or visitor messages.
+
+| Table                                                  | Holds                                         |
+| ------------------------------------------------------ | --------------------------------------------- |
+| `profiles`                                             | Name, title, summary (exactly one row)        |
+| `projects`                                             | Case studies, with a weighted full-text index |
+| `tags`, `project_tags`                                 | Web / Cloud / Data filters                    |
+| `technologies`, `project_technologies`                 | Tech-stack chips, in display order            |
+| `experiences`, `skills`, `certifications`, `education` | The résumé                                    |
+| `contact_messages`                                     | Messages from the contact form                |
+
+Rules live in the database as well as the code: slug formats, date order, one profile row,
+case-insensitive technology names and message length are all `CHECK` constraints or unique indexes.
+
 ## Getting started
 
-Requirements: Node.js 24 (see `.nvmrc`) and npm 11.
+Requirements: Node.js 24 (see `.nvmrc`), npm 11 and Docker.
 
 ```bash
 npm install
 cp .env.example .env
+docker run -d --name portfolio-db -p 5432:5432 \
+  -e POSTGRES_USER=portfolio -e POSTGRES_PASSWORD=portfolio -e POSTGRES_DB=portfolio \
+  postgres:17-alpine
+npm run db:migrate && npm run db:seed
 npm run dev
 ```
 
 - Web: http://localhost:3000
-- API: http://localhost:4000/health
+- API: http://localhost:4000/health (add `?deep=1` to check the database too)
 
 ## Scripts
 
-| Command             | Does                                                          |
-| ------------------- | ------------------------------------------------------------- |
-| `npm run dev`       | Runs the web app and the API together, reloading on change    |
-| `npm run build`     | Builds every package                                          |
-| `npm run lint`      | ESLint (strict, type-aware) across the repo                   |
-| `npm run typecheck` | TypeScript in strict mode across the repo                     |
-| `npm test`          | Unit and API tests (Vitest, Supertest)                        |
-| `npm run test:e2e`  | Browser tests (Playwright); run `npx playwright install` once |
-| `npm run format`    | Formats with Prettier                                         |
-| `npm run check`     | Format check, lint, type-check and tests in one go            |
+| Command               | Does                                                             |
+| --------------------- | ---------------------------------------------------------------- |
+| `npm run dev`         | Runs the web app and the API together, reloading on change       |
+| `npm run build`       | Builds every package                                             |
+| `npm run lint`        | ESLint (strict, type-aware) across the repo                      |
+| `npm run typecheck`   | TypeScript in strict mode across the repo                        |
+| `npm test`            | All Vitest tests, including database tests (needs Docker)        |
+| `npm run test:unit`   | Unit and API tests only, no Docker needed                        |
+| `npm run test:db`     | Database tests against PostgreSQL 17 started by Testcontainers   |
+| `npm run test:e2e`    | Browser tests (Playwright); run `npx playwright install` once    |
+| `npm run db:migrate`  | Applies pending migrations                                       |
+| `npm run db:rollback` | Undoes the latest migration (`-- --all` for every one)           |
+| `npm run db:status`   | Lists applied and pending migrations and seeders                 |
+| `npm run db:seed`     | Loads portfolio content                                          |
+| `npm run db:reset`    | Rebuilds the local database from scratch (refused in production) |
+| `npm run format`      | Formats with Prettier                                            |
+| `npm run check`       | Format check, lint, type-check and tests in one go               |
 
-Git hooks format staged files on commit, and run lint, type-check and tests before each push.
+Git hooks format staged files on commit, and run lint, type-check and unit tests before each push.
 
 ## Licence
 
