@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Tests
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Environment (examples are committed, real values never are)
+.env
+.env.*
+!.env.example
+
+# Hosting
+.vercel
+
+# Logs and OS files
+npm-debug.log*
+*.log
+.DS_Store
+*.pem

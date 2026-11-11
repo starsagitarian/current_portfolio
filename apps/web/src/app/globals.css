@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Daylight palette. SP-10 replaces these with tokens that follow viewport width. */
+:root {
+  --sky-top: #8ecdf0;
+  --sky-bottom: #e8f4fb;
+  --ink: #0f1d3a;
+  --card: #fbf6ec;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-card: var(--card);
+  --font-sans: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
