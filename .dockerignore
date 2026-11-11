@@ -1,0 +1,23 @@
+# Keep build contexts small and free of secrets.
+**/node_modules
+**/dist
+**/.next
+**/*.tsbuildinfo
+**/next-env.d.ts
+.git
+.husky
+.env
+.env.*
+!.env.example
+coverage
+test-results
+playwright-report
+blob-report
+design
+tests
+**/test
+**/*.test.ts
+**/Dockerfile
+compose.yaml
+*.md
+.DS_Store
