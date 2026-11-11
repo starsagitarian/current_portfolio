@@ -1,0 +1,107 @@
+name: Deploy
+
+# Called by CI once every check has passed. Order matters: the database is migrated first, then
+# the API, then the web app, so new code never runs against an old schema.
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: production or preview
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  HUSKY: "0"
+  NEXT_TELEMETRY_DISABLED: "1"
+  VERCEL_CLI: vercel@65.14.0
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+  NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+  NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+  WEB_PROJECT: starsagitarian
+  API_PROJECT: starsagitarian-api
+
+jobs:
+  deploy:
+    name: Deploy (${{ inputs.environment }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.web.outputs.url }}
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+
+      - name: Vercel options
+        id: vercel
+        run: |
+          flags="--yes --token=$VERCEL_TOKEN"
+          if [ -n "$VERCEL_TEAM_ID" ]; then flags="$flags --scope=$VERCEL_TEAM_ID"; fi
+          if [ "${{ inputs.environment }}" = production ]; then flags="$flags --prod"; fi
+          echo "flags=$flags" >> "$GITHUB_OUTPUT"
+
+      # ---- 1. Database
+      - name: Neon branch
+        id: neon
+        run: npx tsx scripts/hosting.ts neon-branch "${{ inputs.environment }}"
+      - name: Migrate and seed
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.direct_url }}
+          DATABASE_SSL: "true"
+        run: |
+          npm run db:migrate
+          npm run db:seed
+
+      # ---- 2. API (prebuilt here, uploaded as a Vercel Build Output)
+      - name: Configure the API project
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.pooled_url }}
+        run: |
+          npx tsx scripts/hosting.ts vercel-project "$API_PROJECT" api
+          npx tsx scripts/hosting.ts vercel-env "$API_PROJECT" "${{ inputs.environment }}" DATABASE_URL
+      - name: Deploy the API
+        id: api
+        run: |
+          npm run build:vercel -w @starsagitarian/api
+          url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt --cwd apps/api --project "$API_PROJECT" ${{ steps.vercel.outputs.flags }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # ---- 3. Web (built by Vercel from the uploaded source, see .vercelignore)
+      - name: Configure the web project
+        run: npx tsx scripts/hosting.ts vercel-project "$WEB_PROJECT" web
+      - name: Deploy the web app
+        id: web
+        run: |
+          url=$(npx --yes "$VERCEL_CLI" deploy --project "$WEB_PROJECT" --archive=tgz \
+            --build-env HUSKY=0 --build-env NEXT_TELEMETRY_DISABLED=1 ${{ steps.vercel.outputs.flags }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # ---- 4. Smoke test (production uses the public domains, which serve the new deployment)
+      - name: Smoke test
+        run: |
+          if [ "${{ inputs.environment }}" = production ]; then
+            api="https://$API_PROJECT.vercel.app"; web="https://$WEB_PROJECT.vercel.app"
+          else
+            api="${{ steps.api.outputs.url }}"; web="${{ steps.web.outputs.url }}"
+          fi
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$api/health?deep=1" | tee /dev/stderr | grep -q '"database":"up"'
+          echo
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "web %{http_code}\n" "$web"
+          {
+            echo "### ${{ inputs.environment }} deployment"
+            echo "| | URL |"
+            echo "| --- | --- |"
+            echo "| Web | $web |"
+            echo "| API | $api/health?deep=1 |"
+          } >> "$GITHUB_STEP_SUMMARY"

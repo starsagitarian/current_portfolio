@@ -72,14 +72,48 @@ docker pull ghcr.io/starsagitarian/starsagitarian-web:latest
 
 GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)) runs on every pull request and on `main`:
 
-| Job      | Does                                                                                                                           |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| checks   | Prettier, ESLint, TypeScript and unit tests                                                                                    |
-| database | Migration, seed and health tests against PostgreSQL 17 (Testcontainers)                                                        |
-| stack    | Builds both images, fails if either passes 200 MB, starts the Compose stack, then runs Playwright against the production build |
-| publish  | On `main` only, after all three pass: pushes both images to GitHub Container Registry, tagged `latest` and `sha-<commit>`      |
+| Job        | Does                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| checks     | Prettier, ESLint, TypeScript and unit tests                                                                                    |
+| database   | Migration, seed and health tests against PostgreSQL 17 (Testcontainers)                                                        |
+| stack      | Builds both images, fails if either passes 200 MB, starts the Compose stack, then runs Playwright against the production build |
+| publish    | On `main` only, after all three pass: pushes both images to GitHub Container Registry, tagged `latest` and `sha-<commit>`      |
+| preview    | On pull requests, after all three pass: deploys a preview of the site and API (see Hosting)                                    |
+| production | On `main`, after all three pass: migrates the live database, then deploys the API and the site                                 |
 
 Actions are pinned to full commit SHAs, and the workflow token is read-only except in the publish job.
+
+## Hosting
+
+Free tiers only, with no payment card on any account.
+
+| Part     | Where                                                            |
+| -------- | ---------------------------------------------------------------- |
+| Web      | https://starsagitarian.vercel.app (Vercel, Next.js)              |
+| API      | https://starsagitarian-api.vercel.app (Vercel Function, London)  |
+| Database | Neon PostgreSQL 17 (London): `production` and `preview` branches |
+
+[`deploy.yml`](.github/workflows/deploy.yml) runs after CI passes, in this order:
+
+1. **Database.** Production uses Neon's default branch. Each preview first resets the `preview`
+   branch to a copy of production. Pending migrations and seeds are then applied, so migrations
+   must stay compatible with the code that is still live (add first, remove later).
+2. **API.** Built in CI and packaged as a Vercel Build Output
+   ([`vercel-output.ts`](apps/api/scripts/vercel-output.ts)): one Node.js 24 function in London, next
+   to the database, with production dependencies installed from the lockfile.
+3. **Web.** Built by Vercel from the source listed in [`.vercelignore`](.vercelignore).
+4. **Smoke test.** The API's deep health check must report the database as up, and the site must answer.
+
+[`scripts/hosting.ts`](scripts/hosting.ts) keeps the setup in code: it creates the Neon `preview` branch
+and both Vercel projects if they are missing, and stores the connection strings as encrypted Vercel
+environment variables. The repository needs:
+
+| Name              | Kind     | Holds                                          |
+| ----------------- | -------- | ---------------------------------------------- |
+| `VERCEL_TOKEN`    | Secret   | Vercel access token                            |
+| `NEON_API_KEY`    | Secret   | Neon API key                                   |
+| `NEON_PROJECT_ID` | Variable | Neon project ID; deploys are skipped until set |
+| `VERCEL_TEAM_ID`  | Variable | Optional: a Vercel team to deploy into         |
 
 ## Getting started (development)
 

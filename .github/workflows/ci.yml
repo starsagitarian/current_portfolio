@@ -146,3 +146,25 @@ jobs:
             api.tags=${{ steps.names.outputs.registry }}/starsagitarian-api:sha-${{ steps.names.outputs.sha }}
             web.tags=${{ steps.names.outputs.registry }}/starsagitarian-web:latest
             web.tags=${{ steps.names.outputs.registry }}/starsagitarian-web:sha-${{ steps.names.outputs.sha }}
+
+  # Deploys run only once hosting is configured (NEON_PROJECT_ID set), and previews only for
+  # branches of this repository, whose runs can read the deploy secrets.
+  preview:
+    name: Preview deployment
+    if: >-
+      github.event_name == 'pull_request' && vars.NEON_PROJECT_ID != '' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    needs: [checks, database, stack]
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: preview
+    secrets: inherit
+
+  production:
+    name: Production deployment
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.NEON_PROJECT_ID != ''
+    needs: [checks, database, stack]
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+    secrets: inherit

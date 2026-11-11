@@ -10,6 +10,7 @@ export default defineConfig([
     "**/node_modules/",
     "**/dist/",
     "**/coverage/",
+    "**/.vercel/",
     "test-results/",
     "playwright-report/",
     "apps/web/",

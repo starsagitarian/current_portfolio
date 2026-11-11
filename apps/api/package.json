@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "tsx watch --clear-screen=false --env-file-if-exists=../../.env src/server.ts",
     "build": "tsup",
+    "build:vercel": "tsup && tsx scripts/vercel-output.ts",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "db": "tsx --env-file-if-exists=../../.env src/db/cli.ts",

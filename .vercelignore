@@ -1,0 +1,20 @@
+# Upload for the web project's remote build: only what `npm ci` and `next build` need.
+/*
+!/package.json
+!/package-lock.json
+!/tsconfig.base.json
+!/packages
+!/apps
+/apps/*
+!/apps/web
+# The lockfile lists every workspace, so the API's manifest (only) comes too.
+!/apps/api
+/apps/api/*
+!/apps/api/package.json
+**/node_modules
+**/.next
+**/.vercel
+**/dist
+**/*.tsbuildinfo
+**/*.test.ts
+**/Dockerfile

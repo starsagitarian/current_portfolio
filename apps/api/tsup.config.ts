@@ -4,6 +4,8 @@ export default defineConfig({
   entry: {
     server: "src/server.ts",
     app: "src/app.ts",
+    // Request handler for Vercel Functions (see scripts/vercel-output.ts).
+    vercel: "src/vercel.ts",
     // Migrations and seeds for deploy pipelines, without needing tsx in production.
     "db-cli": "src/db/cli.ts",
   },
