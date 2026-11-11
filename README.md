@@ -61,6 +61,26 @@ container has a read-only filesystem, and every app container drops all Linux ca
 
 `docker compose down` stops everything and keeps the data; add `-v` to delete it as well.
 
+Published images (built by CI from `main`):
+
+```bash
+docker pull ghcr.io/starsagitarian/starsagitarian-api:latest
+docker pull ghcr.io/starsagitarian/starsagitarian-web:latest
+```
+
+## Continuous integration
+
+GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)) runs on every pull request and on `main`:
+
+| Job      | Does                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| checks   | Prettier, ESLint, TypeScript and unit tests                                                                                    |
+| database | Migration, seed and health tests against PostgreSQL 17 (Testcontainers)                                                        |
+| stack    | Builds both images, fails if either passes 200 MB, starts the Compose stack, then runs Playwright against the production build |
+| publish  | On `main` only, after all three pass: pushes both images to GitHub Container Registry, tagged `latest` and `sha-<commit>`      |
+
+Actions are pinned to full commit SHAs, and the workflow token is read-only except in the publish job.
+
 ## Getting started (development)
 
 Requirements: Node.js 24 (see `.nvmrc`), npm 11 and Docker.

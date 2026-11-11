@@ -36,6 +36,9 @@ RUN --mount=type=cache,target=/root/.npm \
 # and Corepack, which a running server never needs (about 40 MB).
 FROM ${NODE_IMAGE} AS node
 FROM ${ALPINE_IMAGE} AS runtime
+LABEL org.opencontainers.image.source="https://github.com/starsagitarian/current_portfolio" \
+      org.opencontainers.image.description="Portfolio REST API: Express 5, TypeScript, Sequelize, PostgreSQL" \
+      org.opencontainers.image.licenses="MIT"
 RUN apk add --no-cache libstdc++ \
  && addgroup -g 1000 node \
  && adduser -u 1000 -G node -s /sbin/nologin -D node
