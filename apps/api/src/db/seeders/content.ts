@@ -35,7 +35,7 @@ export interface ProjectSeed {
 export const projects: ProjectSeed[] = [
   {
     slug: "portfolio-platform",
-    title: "Portfolio Platform",
+    title: "Portfolio platform",
     organisation: null,
     summary:
       "This site: an illustrated London whose light follows your screen width, backed by a TypeScript API and PostgreSQL.",
