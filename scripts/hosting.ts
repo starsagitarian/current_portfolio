@@ -179,6 +179,10 @@ const PROJECT_SETTINGS: Record<string, Record<string, unknown>> = {
     rootDirectory: "apps/web",
     // The web app imports the shared workspace package.
     sourceFilesOutsideRootDirectory: true,
+    // Install from the repository root, exactly as locked (as CI does). A plain `npm install`
+    // inside apps/web skips the root's dev tools, and the root's `prepare` script then fails.
+    installCommand:
+      "cd ../.. && npm ci --no-audit --no-fund --workspace @starsagitarian/web --include-workspace-root",
   },
   // Deployed prebuilt from CI (Build Output API), so no framework or build settings.
   api: { framework: null },
