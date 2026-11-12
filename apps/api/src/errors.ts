@@ -1,5 +1,7 @@
 import type { ErrorRequestHandler, RequestHandler, Response } from "express";
+import { ConnectionError } from "sequelize";
 import { PROBLEM_CONTENT_TYPE, type Problem } from "@starsagitarian/shared";
+import { NO_STORE } from "./http/cache";
 
 /** An error that maps directly onto an HTTP problem response. */
 export class HttpError extends Error {
@@ -13,8 +15,13 @@ export class HttpError extends Error {
   }
 }
 
+/** Errors are never cached, so a CDN cannot keep serving a failure after it is fixed. */
 function sendProblem(res: Response, problem: Problem): void {
-  res.status(problem.status).type(PROBLEM_CONTENT_TYPE).json(problem);
+  res
+    .status(problem.status)
+    .set("Cache-Control", NO_STORE)
+    .type(PROBLEM_CONTENT_TYPE)
+    .json(problem);
 }
 
 function clientErrorStatus(err: unknown): number | undefined {
@@ -59,6 +66,19 @@ export const errorHandler: ErrorRequestHandler = (err: unknown, req, res, next) 
       type: "about:blank",
       title: "Bad Request",
       status,
+      instance: req.originalUrl,
+    });
+    return;
+  }
+
+  if (err instanceof ConnectionError) {
+    // The reason stays in the server logs; callers only learn that it is down.
+    req.log.error({ err }, "database unreachable");
+    sendProblem(res, {
+      type: "about:blank",
+      title: "Service Unavailable",
+      status: 503,
+      detail: "The database is unreachable.",
       instance: req.originalUrl,
     });
     return;

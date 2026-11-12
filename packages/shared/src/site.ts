@@ -3,6 +3,7 @@ export const site = {
   name: "Baiju Joseph",
   brand: "starsagitarian",
   title: "Software & Cloud Engineer",
+  url: "https://starsagitarian.vercel.app",
   links: {
     github: "https://github.com/starsagitarian",
     linkedin: "https://www.linkedin.com/in/baiju-joseph-aws-csm-cspo-8a8aa37/",

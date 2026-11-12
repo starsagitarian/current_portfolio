@@ -97,6 +97,9 @@ jobs:
           fi
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$api/health?deep=1" | tee /dev/stderr | grep -q '"database":"up"'
           echo
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$api/v1/projects?pageSize=1" | grep -q '"items":\[{'
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "cv %{http_code} %{content_type}\n" \
+            "$api/v1/profile/cv.pdf" | tee /dev/stderr | grep -q "application/pdf"
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "web %{http_code}\n" "$web"
           {
             echo "### ${{ inputs.environment }} deployment"

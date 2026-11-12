@@ -102,7 +102,8 @@ Free tiers only, with no payment card on any account.
    ([`vercel-output.ts`](apps/api/scripts/vercel-output.ts)): one Node.js 24 function in London, next
    to the database, with production dependencies installed from the lockfile.
 3. **Web.** Built by Vercel from the source listed in [`.vercelignore`](.vercelignore).
-4. **Smoke test.** The API's deep health check must report the database as up, and the site must answer.
+4. **Smoke test.** The API's deep health check must report the database as up, the content API must
+   list projects and serve the CV PDF, and the site must answer.
 
 [`scripts/hosting.ts`](scripts/hosting.ts) keeps the setup in code: it creates the Neon `preview` branch
 and both Vercel projects if they are missing, and stores the connection strings as encrypted Vercel
@@ -134,6 +135,31 @@ npm run dev
 
 If port 5432 is already taken by a local PostgreSQL, publish the container on another port
 (`-p 5433:5432`) and change the port in `DATABASE_URL` in `.env` to match.
+
+## API
+
+| Endpoint                                   | Returns                                                              |
+| ------------------------------------------ | -------------------------------------------------------------------- |
+| `GET /v1/projects?tag=&q=&page=&pageSize=` | Published projects: filter by tag slug, full-text search, pagination |
+| `GET /v1/projects/:slug`                   | One project with its full write-up                                   |
+| `GET /v1/profile`                          | The résumé: headline, experience, skills, certifications, education  |
+| `GET /v1/profile/cv.pdf`                   | The same résumé as a downloadable A4 PDF                             |
+| `GET /health`                              | Liveness; `?deep=1` also checks the database                         |
+
+Each route reads through a service, which reads through a repository, so HTTP, shaping and SQL each
+live in one place ([`apps/api/src`](apps/api/src)). Response shapes are Zod schemas in
+[`packages/shared`](packages/shared/src/content.ts), shared with the web app.
+
+- **Caching.** Content responses carry `s-maxage=3600, stale-while-revalidate=86400`, so the CDN
+  asks the database at most about once an hour per URL. ETags allow `304 Not Modified`. Errors are
+  never cached.
+- **Errors.** Every error is `application/problem+json` (RFC 9457). Bad query parameters get a 400
+  that names them; a database outage gets a 503 that reveals nothing about the database.
+- **Rate limit.** `RATE_LIMIT_PER_MINUTE` requests per client per minute on `/v1` (default 60), with
+  standard `RateLimit` headers and `Retry-After` on a 429.
+- **Logs.** One JSON line per request with its id, method, URL and status: no headers, cookies or IPs.
+- **CV PDF.** Drawn by a small built-in PDF writer using the standard Helvetica fonts, so it needs no
+  extra packages and comes to about 6 KB. It shows no phone number, email or postal address.
 
 ## Scripts
 

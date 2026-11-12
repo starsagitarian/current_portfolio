@@ -49,12 +49,46 @@ describe("errors", () => {
   });
 });
 
+describe("/v1 without a database", () => {
+  it("answers 503 problem+json that is never cached", async () => {
+    const res = await request(app).get("/v1/projects").expect(503);
+
+    expect(res.headers["content-type"]).toContain(PROBLEM_CONTENT_TYPE);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    expect(ProblemSchema.parse(res.body).detail).toBe("The database is not configured.");
+  });
+});
+
+describe("rate limiting", () => {
+  it("allows the configured number of requests a minute, then answers 429", async () => {
+    const limited = createApp(loadConfig({ NODE_ENV: "test", RATE_LIMIT_PER_MINUTE: "2" }));
+
+    const first = await request(limited).get("/v1/profile");
+    expect(first.headers.ratelimit).toMatch(/r=1/);
+    await request(limited).get("/v1/profile");
+
+    const res = await request(limited).get("/v1/profile").expect(429);
+    expect(res.headers["retry-after"]).toMatch(/^\d+$/);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    expect(ProblemSchema.parse(res.body)).toMatchObject({
+      status: 429,
+      title: "Too Many Requests",
+    });
+  });
+
+  it("leaves the health check alone", async () => {
+    const limited = createApp(loadConfig({ NODE_ENV: "test", RATE_LIMIT_PER_MINUTE: "1" }));
+    for (let i = 0; i < 3; i++) await request(limited).get("/health").expect(200);
+  });
+});
+
 describe("loadConfig", () => {
   it("applies defaults", () => {
     expect(loadConfig({})).toMatchObject({
       PORT: 4000,
       NODE_ENV: "development",
       LOG_LEVEL: "info",
+      RATE_LIMIT_PER_MINUTE: 60,
     });
   });
 

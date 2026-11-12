@@ -23,6 +23,7 @@
   "dependencies": {
     "@starsagitarian/shared": "*",
     "express": "^5.3.0",
+    "express-rate-limit": "^8.7.4",
     "helmet": "^8.3.0",
     "pg": "^8.23.1",
     "pg-hstore": "^2.3.4",

@@ -14,6 +14,8 @@ const EnvSchema = z.object({
   DATABASE_SSL: z.stringbool().default(false),
   /** Connections per process; keep low on serverless hosts. */
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
+  /** Requests per minute that one client may make to /v1 before it gets 429 responses. */
+  RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).max(10_000).default(60),
 });
 
 export type Config = z.infer<typeof EnvSchema> & { version: string; service: string };
