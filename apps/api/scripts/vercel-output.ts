@@ -91,6 +91,9 @@ async function main(): Promise<void> {
           DATABASE_SSL: "true",
           DATABASE_POOL_MAX: "2",
           LOG_LEVEL: "info",
+          // The site and its preview deployments may send contact messages from a browser.
+          CORS_ORIGINS:
+            "https://starsagitarian.vercel.app,https://starsagitarian-*-starsagitarian.vercel.app",
         },
       },
       null,
@@ -100,7 +103,17 @@ async function main(): Promise<void> {
 
   await writeFile(
     path.join(outputDir, "config.json"),
-    JSON.stringify({ version: 3, routes: [{ src: "/(.*)", dest: "/index" }] }, null, 2),
+    JSON.stringify(
+      {
+        version: 3,
+        routes: [{ src: "/(.*)", dest: "/index" }],
+        // Daily clean-up of contact messages older than 12 months (production deployments only).
+        // Vercel sends CRON_SECRET from the project's environment as a bearer token.
+        crons: [{ path: "/cron/purge-contact-messages", schedule: "17 3 * * *" }],
+      },
+      null,
+      2,
+    ),
   );
 
   console.info(`Build output written to ${path.relative(repoRoot, outputDir)}`);

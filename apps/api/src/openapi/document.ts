@@ -1,6 +1,9 @@
 import { z } from "zod";
 import {
   CertificationSchema,
+  CONTACT_LIMITS,
+  ContactReceiptSchema,
+  ContactRequestSchema,
   EducationSchema,
   ExperienceSchema,
   HealthResponseSchema,
@@ -11,6 +14,7 @@ import {
   ProjectListSchema,
   PROJECTS_PAGE_SIZE,
   ProjectSummarySchema,
+  PurgeResultSchema,
   site,
   SkillGroupSchema,
   SLUG_PATTERN,
@@ -37,6 +41,9 @@ const COMPONENTS = {
   SkillGroup: SkillGroupSchema,
   Certification: CertificationSchema,
   Education: EducationSchema,
+  ContactRequest: ContactRequestSchema,
+  ContactReceipt: ContactReceiptSchema,
+  PurgeResult: PurgeResultSchema,
   Health: HealthResponseSchema,
   Problem: ProblemSchema,
 } satisfies Record<string, z.ZodType>;
@@ -224,6 +231,63 @@ function paths(): JsonObject {
         },
       },
     },
+    "/v1/contact": {
+      post: {
+        operationId: "sendMessage",
+        tags: ["Contact"],
+        summary: "Send a message",
+        description: [
+          "Takes a message from the contact form on the site. In order: the body is validated, a filled-in honeypot field is dropped silently, the Cloudflare Turnstile token is verified, the sender is held to a few messages an hour, then the message is stored and emailed to the site owner.",
+          "",
+          `Messages are kept for 12 months. The sender's IP address is stored only as a keyed hash. Browsers may call this only from the site itself (CORS). Limits: name ${CONTACT_LIMITS.name}, email ${CONTACT_LIMITS.email}, message ${CONTACT_LIMITS.message} characters.`,
+        ].join("\n"),
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: ref("ContactRequest") } },
+        },
+        responses: {
+          "202": {
+            description: "Received.",
+            headers: {
+              "Cache-Control": string("Always `no-store`."),
+              ...RATE_LIMIT_HEADERS,
+            },
+            content: { "application/json": { schema: ref("ContactReceipt") } },
+          },
+          "400": problem("The body is invalid; the detail names the fields."),
+          "403": problem(
+            "The bot check failed, or the request came from a site that is not allowed.",
+          ),
+          "429": problem("Too many messages or requests from this sender.", {
+            "Retry-After": string("Seconds to wait before trying again."),
+          }),
+          "503": problem(
+            "The contact form is not configured, the database is unreachable or the bot check is unavailable.",
+          ),
+        },
+      },
+    },
+    "/cron/purge-contact-messages": {
+      get: {
+        operationId: "purgeContactMessages",
+        tags: ["Maintenance"],
+        summary: "Delete expired messages",
+        description:
+          "Deletes contact messages older than 12 months. Run daily by the scheduler, which authenticates with a bearer token.",
+        security: [{ cronSecret: [] }],
+        responses: {
+          "200": {
+            description: "How many messages were deleted.",
+            headers: { "Cache-Control": string("Always `no-store`.") },
+            content: { "application/json": { schema: ref("PurgeResult") } },
+          },
+          "401": problem("The bearer token is missing or wrong.", {
+            "WWW-Authenticate": string("`Bearer`."),
+          }),
+          "503": problem("Scheduled jobs or the database are not configured."),
+        },
+      },
+    },
     "/health": {
       get: {
         operationId: "getHealth",
@@ -261,16 +325,27 @@ export function buildOpenApiDocument(): JsonObject {
       version: pkg.version,
       summary: `The content API behind ${site.url.replace(/^https:\/\//, "")}.`,
       description:
-        "Projects and the résumé of Baiju Joseph, served from PostgreSQL. Responses are cached at the CDN, errors use RFC 9457 problem details, and each client may make a limited number of requests a minute.",
+        "Projects, the résumé and the contact form of Baiju Joseph's portfolio, backed by PostgreSQL. Reads are cached at the CDN, errors use RFC 9457 problem details, and each client may make a limited number of requests a minute.",
       license: { name: "MIT", identifier: "MIT" },
     },
     servers: [{ url: "/", description: "This server" }],
     tags: [
       { name: "Projects", description: "Portfolio projects." },
       { name: "Profile", description: "The résumé, as JSON or PDF." },
+      { name: "Contact", description: "The contact form." },
       { name: "Health", description: "Service checks." },
+      { name: "Maintenance", description: "Scheduled jobs, for the scheduler only." },
     ],
     paths: paths(),
-    components: { schemas: componentSchemas() },
+    components: {
+      schemas: componentSchemas(),
+      securitySchemes: {
+        cronSecret: {
+          type: "http",
+          scheme: "bearer",
+          description: "The scheduler's secret (CRON_SECRET).",
+        },
+      },
+    },
   };
 }

@@ -103,18 +103,24 @@ Free tiers only, with no payment card on any account.
    to the database, with production dependencies installed from the lockfile.
 3. **Web.** Built by Vercel from the source listed in [`.vercelignore`](.vercelignore).
 4. **Smoke test.** The API's deep health check must report the database as up, the content API must
-   list projects and serve the CV PDF, and the site must answer.
+   list projects and serve the CV PDF, the contact form must be switched on (an empty message gets a
+   400), and the site must answer.
 
 [`scripts/hosting.ts`](scripts/hosting.ts) keeps the setup in code: it creates the Neon `preview` branch
 and both Vercel projects if they are missing, and stores the connection strings as encrypted Vercel
 environment variables. The repository needs:
 
-| Name              | Kind               | Holds                                                             |
-| ----------------- | ------------------ | ----------------------------------------------------------------- |
-| `VERCEL_TOKEN`    | Secret             | Vercel access token (expires 12 Nov 2027: replace it before then) |
-| `NEON_API_KEY`    | Secret             | Neon API key                                                      |
-| `NEON_PROJECT_ID` | Variable           | Neon project ID; deploys are skipped until set                    |
-| `VERCEL_TEAM_ID`  | Secret or variable | The Vercel team to deploy into (`team_…`)                         |
+| Name                   | Kind               | Holds                                                                           |
+| ---------------------- | ------------------ | ------------------------------------------------------------------------------- |
+| `VERCEL_TOKEN`         | Secret             | Vercel access token (expires 12 Nov 2027: replace it before then)               |
+| `NEON_API_KEY`         | Secret             | Neon API key                                                                    |
+| `NEON_PROJECT_ID`      | Variable           | Neon project ID; deploys are skipped until set                                  |
+| `VERCEL_TEAM_ID`       | Secret or variable | The Vercel team to deploy into (`team_…`)                                       |
+| `TURNSTILE_SECRET_KEY` | Secret             | Cloudflare Turnstile secret for production (previews use Cloudflare's test key) |
+| `RESEND_API_KEY`       | Secret             | Resend API key for contact alerts                                               |
+| `CONTACT_ALERT_EMAIL`  | Secret             | Where contact alerts go; never in the repository or on the site                 |
+
+`IP_HASH_SALT` and `CRON_SECRET` are created at random on the first deploy and kept in Vercel.
 
 ## Getting started (development)
 
@@ -144,6 +150,7 @@ If port 5432 is already taken by a local PostgreSQL, publish the container on an
 | `GET /v1/projects/:slug`                   | One project with its full write-up                                   |
 | `GET /v1/profile`                          | The résumé: headline, experience, skills, certifications, education  |
 | `GET /v1/profile/cv.pdf`                   | The same résumé as a downloadable A4 PDF                             |
+| `POST /v1/contact`                         | A message from the contact form                                      |
 | `GET /health`                              | Liveness; `?deep=1` also checks the database                         |
 | `GET /docs`                                | Interactive documentation, where every endpoint can be tried         |
 | `GET /openapi.json`                        | The OpenAPI 3.1 document                                             |
@@ -165,6 +172,15 @@ live in one place ([`apps/api/src`](apps/api/src)). Response shapes are Zod sche
   review. Tests check every response (status, content type, headers and body) against it, fail if
   any documented response is never produced, and fail if the committed file is out of date
   (`npm run openapi -w @starsagitarian/api` regenerates it).
+- **Contact form.** A message is validated, dropped silently if the hidden honeypot field is
+  filled in, checked with Cloudflare Turnstile, limited to `CONTACT_LIMIT_PER_HOUR` (5) per sender
+  (counted in PostgreSQL under a lock, so it holds across serverless instances), stored, then
+  emailed to the owner through Resend. IP addresses are stored only as an HMAC keyed with
+  `IP_HASH_SALT`. Only the site and its previews may post from a browser (`CORS_ORIGINS`); public
+  reads allow any origin. Logs carry the message id, never its content or the sender's details.
+- **Retention.** Vercel Cron calls `GET /cron/purge-contact-messages` daily with `CRON_SECRET`,
+  deleting messages older than 12 months. Preview databases are copies of production, so deploys
+  clear their contact messages.
 - **CV PDF.** Drawn by a small built-in PDF writer using the standard Helvetica fonts, so it needs no
   extra packages and comes to about 6 KB. It shows no phone number, email or postal address.
 

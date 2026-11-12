@@ -15,8 +15,13 @@
  *   tsx scripts/hosting.ts vercel-env <project> <production|preview> <KEY>
  *       Stores the value of the environment variable KEY as an encrypted project variable.
  *
+ *   tsx scripts/hosting.ts vercel-secret <project> <production|preview> <KEY>
+ *       Creates KEY as a random encrypted project variable if it does not exist yet, and
+ *       leaves it alone if it does. For secrets nobody needs to know, such as a hash salt.
+ *
  * Needs NEON_API_KEY and NEON_PROJECT_ID, or VERCEL_TOKEN (and VERCEL_TEAM_ID for a team scope).
  */
+import { randomBytes } from "node:crypto";
 import { appendFile } from "node:fs/promises";
 
 const NEON_API = "https://console.neon.tech/api/v2";
@@ -228,6 +233,34 @@ async function vercelEnv(project: string, target: string, key: string): Promise<
   console.info(`Set ${key} for ${project} (${target})`);
 }
 
+interface VercelEnvList {
+  envs: { key: string; target?: string[] | string }[];
+}
+
+async function vercelSecret(project: string, target: string, key: string): Promise<void> {
+  if (target !== "production" && target !== "preview") throw new Error(`Bad target: ${target}`);
+  const { envs } = await vercel<VercelEnvList>(`/v9/projects/${project}/env`);
+  const exists = envs.some(
+    (item) =>
+      item.key === key &&
+      (Array.isArray(item.target) ? item.target.includes(target) : item.target === target),
+  );
+  if (exists) {
+    console.info(`Kept ${key} for ${project} (${target})`);
+    return;
+  }
+  await vercel(`/v10/projects/${project}/env`, {
+    method: "POST",
+    body: JSON.stringify({
+      key,
+      value: randomBytes(32).toString("base64url"),
+      type: "encrypted",
+      target: [target],
+    }),
+  });
+  console.info(`Created ${key} for ${project} (${target})`);
+}
+
 // ---------------------------------------------------------------- CLI
 
 const [command, ...args] = process.argv.slice(2);
@@ -243,7 +276,10 @@ switch (command) {
   case "vercel-env":
     await vercelEnv(first, second, third);
     break;
+  case "vercel-secret":
+    await vercelSecret(first, second, third);
+    break;
   default:
-    console.error("Usage: hosting.ts <neon-branch|vercel-project|vercel-env> ...");
+    console.error("Usage: hosting.ts <neon-branch|vercel-project|vercel-env|vercel-secret> ...");
     process.exitCode = 1;
 }

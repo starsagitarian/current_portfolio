@@ -4,7 +4,8 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app";
 import { loadConfig } from "../../src/config";
-import { Profile } from "../../src/db";
+import type { BotCheck } from "../../src/contact/bot-check";
+import { ContactMessage, Profile } from "../../src/db";
 import { createContract } from "../helpers/contract";
 import { connect, resetDatabase, testConfig } from "./helpers";
 
@@ -102,6 +103,79 @@ describe("GET /health", () => {
     const res = await request(createApp(loadConfig({ NODE_ENV: "test" }))).get("/health?deep=1");
     contract.check(res, "get", "/health");
     expect(res.status).toBe(503);
+  });
+});
+
+describe("POST /v1/contact", () => {
+  const botCheck: BotCheck = { verify: (token) => Promise.resolve(token === "pass") };
+  const contactApp = (env: Record<string, string> = {}) =>
+    createApp(
+      testConfig({
+        IP_HASH_SALT: "contract-salt-0123456789",
+        RATE_LIMIT_PER_MINUTE: "10000",
+        ...env,
+      }),
+      { sequelize, botCheck },
+    );
+  const message = {
+    name: "Ada",
+    email: "ada@example.com",
+    message: "Hello",
+    turnstileToken: "pass",
+  };
+  const post = (app: Express, body: object) => request(app).post("/v1/contact").send(body);
+
+  it("202, 400 and 403 match the spec", async () => {
+    const app = contactApp();
+    for (const [body, status] of [
+      [message, 202],
+      [{ ...message, email: "nope" }, 400],
+      [{ ...message, turnstileToken: "forged" }, 403],
+    ] as const) {
+      const res = await post(app, body);
+      contract.check(res, "post", "/v1/contact");
+      expect(res.status).toBe(status);
+    }
+  });
+
+  it("429 matches the spec", async () => {
+    const app = contactApp({ CONTACT_LIMIT_PER_HOUR: "1" });
+    await post(app, message).set("X-Forwarded-For", "192.0.2.50");
+    const res = await post(app, message).set("X-Forwarded-For", "192.0.2.50");
+    contract.check(res, "post", "/v1/contact");
+    expect(res.status).toBe(429);
+  });
+
+  it("503 matches the spec", async () => {
+    const res = await post(createApp(testConfig(), { sequelize }), message);
+    contract.check(res, "post", "/v1/contact");
+    expect(res.status).toBe(503);
+  });
+});
+
+describe("GET /cron/purge-contact-messages", () => {
+  const secret = "contract-cron-secret-0123";
+  const path = "/cron/purge-contact-messages";
+
+  it("200 and 401 match the spec", async () => {
+    const app = createApp(testConfig({ CRON_SECRET: secret }), { sequelize });
+    const ok = await request(app).get(path).set("Authorization", `Bearer ${secret}`);
+    contract.check(ok, "get", path);
+    expect(ok.status).toBe(200);
+
+    const unauthorised = await request(app).get(path);
+    contract.check(unauthorised, "get", path);
+    expect(unauthorised.status).toBe(401);
+  });
+
+  it("503 matches the spec", async () => {
+    const res = await request(createApp(testConfig(), { sequelize })).get(path);
+    contract.check(res, "get", path);
+    expect(res.status).toBe(503);
+  });
+
+  afterAll(async () => {
+    await ContactMessage.destroy({ where: {} });
   });
 });
 

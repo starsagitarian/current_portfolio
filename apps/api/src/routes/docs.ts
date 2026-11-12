@@ -69,7 +69,11 @@ export function docsRouter(): Router {
   const document = buildOpenApiDocument();
 
   router.get("/openapi.json", (_req, res) => {
-    res.set("Cache-Control", DOCS_CACHE_CONTROL).json(document);
+    // Public, so other tools (and other sites) may fetch it.
+    res
+      .set("Cache-Control", DOCS_CACHE_CONTROL)
+      .set("Access-Control-Allow-Origin", "*")
+      .json(document);
   });
 
   router.get("/docs", (_req, res) => {

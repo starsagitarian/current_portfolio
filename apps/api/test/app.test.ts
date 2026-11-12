@@ -92,6 +92,12 @@ describe("loadConfig", () => {
     });
   });
 
+  it("treats empty values as unset", () => {
+    const config = loadConfig({ RESEND_API_KEY: "", CONTACT_ALERT_EMAIL: "" });
+    expect(config.RESEND_API_KEY).toBeUndefined();
+    expect(config.CONTACT_ALERT_EMAIL).toBeUndefined();
+  });
+
   it("rejects an invalid port", () => {
     expect(() => loadConfig({ PORT: "99999" })).toThrow(/Invalid environment configuration/);
   });

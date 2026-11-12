@@ -62,14 +62,44 @@ jobs:
         run: |
           npm run db:migrate
           npm run db:seed
+      # The preview branch is a copy of production: keep visitors' messages out of it.
+      - name: Clear contact messages from the preview database
+        if: inputs.environment == 'preview'
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.direct_url }}
+          DATABASE_SSL: "true"
+        run: npm run db -w @starsagitarian/api -- clear-messages
 
       # ---- 2. API (prebuilt here, uploaded as a Vercel Build Output)
       - name: Configure the API project
         env:
+          TARGET: ${{ inputs.environment }}
           DATABASE_URL: ${{ steps.neon.outputs.pooled_url }}
+          PRODUCTION_TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          CONTACT_ALERT_EMAIL: ${{ secrets.CONTACT_ALERT_EMAIL }}
         run: |
           npx tsx scripts/hosting.ts vercel-project "$API_PROJECT" api
-          npx tsx scripts/hosting.ts vercel-env "$API_PROJECT" "${{ inputs.environment }}" DATABASE_URL
+          npx tsx scripts/hosting.ts vercel-env "$API_PROJECT" "$TARGET" DATABASE_URL
+          # Random secrets, created once and then kept.
+          npx tsx scripts/hosting.ts vercel-secret "$API_PROJECT" "$TARGET" IP_HASH_SALT
+          if [ "$TARGET" = production ]; then
+            npx tsx scripts/hosting.ts vercel-secret "$API_PROJECT" "$TARGET" CRON_SECRET
+          fi
+          # Previews use Cloudflare's published always-pass test secret, so the form can be tried
+          # there without the real widget; production uses the real one.
+          if [ "$TARGET" = preview ]; then
+            export TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+          else
+            export TURNSTILE_SECRET_KEY="$PRODUCTION_TURNSTILE_SECRET_KEY"
+          fi
+          for key in TURNSTILE_SECRET_KEY RESEND_API_KEY CONTACT_ALERT_EMAIL; do
+            if [ -n "${!key}" ]; then
+              npx tsx scripts/hosting.ts vercel-env "$API_PROJECT" "$TARGET" "$key"
+            else
+              echo "::notice::$key is not set: the contact form stays off or sends no alerts until it is."
+            fi
+          done
       - name: Deploy the API
         id: api
         run: |
@@ -89,6 +119,9 @@ jobs:
 
       # ---- 4. Smoke test (production uses the public domains, which serve the new deployment)
       - name: Smoke test
+        env:
+          # Production answers 503 on the contact form until the Turnstile secret is set.
+          CONTACT_ON: ${{ inputs.environment == 'preview' || secrets.TURNSTILE_SECRET_KEY != '' }}
         run: |
           if [ "${{ inputs.environment }}" = production ]; then
             api="https://$API_PROJECT.vercel.app"; web="https://$WEB_PROJECT.vercel.app"
@@ -100,6 +133,12 @@ jobs:
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$api/v1/projects?pageSize=1" | grep -q '"items":\[{'
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "cv %{http_code} %{content_type}\n" \
             "$api/v1/profile/cv.pdf" | tee /dev/stderr | grep -q "application/pdf"
+          # An empty message is refused by validation (400), which proves the form is configured
+          # without storing or sending anything.
+          contact=$(curl -sS -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" \
+            -d "{}" "$api/v1/contact")
+          echo "contact $contact"
+          if [ "$CONTACT_ON" = true ]; then [ "$contact" = 400 ]; else [ "$contact" = 503 ]; fi
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "web %{http_code}\n" "$web"
           {
             echo "### ${{ inputs.environment }} deployment"

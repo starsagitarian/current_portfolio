@@ -4,7 +4,7 @@
     "title": "starsagitarian API",
     "version": "0.1.0",
     "summary": "The content API behind starsagitarian.vercel.app.",
-    "description": "Projects and the résumé of Baiju Joseph, served from PostgreSQL. Responses are cached at the CDN, errors use RFC 9457 problem details, and each client may make a limited number of requests a minute.",
+    "description": "Projects, the résumé and the contact form of Baiju Joseph's portfolio, backed by PostgreSQL. Reads are cached at the CDN, errors use RFC 9457 problem details, and each client may make a limited number of requests a minute.",
     "license": {
       "name": "MIT",
       "identifier": "MIT"
@@ -26,8 +26,16 @@
       "description": "The résumé, as JSON or PDF."
     },
     {
+      "name": "Contact",
+      "description": "The contact form."
+    },
+    {
       "name": "Health",
       "description": "Service checks."
+    },
+    {
+      "name": "Maintenance",
+      "description": "Scheduled jobs, for the scheduler only."
     }
   ],
   "paths": {
@@ -564,6 +572,209 @@
         }
       }
     },
+    "/v1/contact": {
+      "post": {
+        "operationId": "sendMessage",
+        "tags": ["Contact"],
+        "summary": "Send a message",
+        "description": "Takes a message from the contact form on the site. In order: the body is validated, a filled-in honeypot field is dropped silently, the Cloudflare Turnstile token is verified, the sender is held to a few messages an hour, then the message is stored and emailed to the site owner.\n\nMessages are kept for 12 months. The sender's IP address is stored only as a keyed hash. Browsers may call this only from the site itself (CORS). Limits: name 100, email 254, message 5000 characters.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Received.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit": {
+                "description": "Requests left in the current window (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "The limit and window that apply (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The body is invalid; the detail names the fields.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The bot check failed, or the request came from a site that is not allowed.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many messages or requests from this sender.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The contact form is not configured, the database is unreachable or the bot check is unavailable.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cron/purge-contact-messages": {
+      "get": {
+        "operationId": "purgeContactMessages",
+        "tags": ["Maintenance"],
+        "summary": "Delete expired messages",
+        "description": "Deletes contact messages older than 12 months. Run daily by the scheduler, which authenticates with a bearer token.",
+        "security": [
+          {
+            "cronSecret": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "How many messages were deleted.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgeResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The bearer token is missing or wrong.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "description": "`Bearer`.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Scheduled jobs or the database are not configured.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "operationId": "getHealth",
@@ -1014,6 +1225,66 @@
         "required": ["institution", "qualification", "location", "endYear"],
         "additionalProperties": false
       },
+      "ContactRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          },
+          "website": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "turnstileToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "required": ["name", "email", "message", "turnstileToken"],
+        "additionalProperties": false
+      },
+      "ContactReceipt": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "received"
+          }
+        },
+        "required": ["status"],
+        "additionalProperties": false
+      },
+      "PurgeResult": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "before": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": ["deleted", "before"],
+        "additionalProperties": false
+      },
       "Health": {
         "type": "object",
         "properties": {
@@ -1066,6 +1337,13 @@
         },
         "required": ["type", "title", "status"],
         "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "cronSecret": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "The scheduler's secret (CRON_SECRET)."
       }
     }
   }

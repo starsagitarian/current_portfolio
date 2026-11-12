@@ -7,11 +7,12 @@
  *   seed        load portfolio content
  *   unseed      remove portfolio content (contact messages are kept)
  *   reset       unseed, roll back everything, migrate, seed (local use only)
+ *   clear-messages  delete every contact message (preview databases copied from production)
  */
 import { loadConfig } from "../config";
-import { connectDatabase, createMigrator, createSeeder, rollback } from "./index";
+import { ContactMessage, connectDatabase, createMigrator, createSeeder, rollback } from "./index";
 
-const USAGE = "Usage: db <migrate|rollback [--all]|status|seed|unseed|reset>";
+const USAGE = "Usage: db <migrate|rollback [--all]|status|seed|unseed|reset|clear-messages>";
 
 async function main(argv: string[]): Promise<void> {
   const [command, flag] = argv;
@@ -52,6 +53,12 @@ async function main(argv: string[]): Promise<void> {
         await migrator.down({ to: 0 });
         console.info(`Applied: ${names(await migrator.up())}`);
         console.info(`Seeded: ${names(await seeder.up())}`);
+        break;
+      case "clear-messages":
+        if (config.NODE_ENV === "production") {
+          throw new Error("clear-messages is disabled in production.");
+        }
+        console.info(`Deleted ${await ContactMessage.destroy({ where: {} })} contact messages.`);
         break;
       default:
         throw new Error(USAGE);
