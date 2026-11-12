@@ -193,9 +193,11 @@ async function vercelProject(name: string, kind: string): Promise<void> {
     project = await vercel<VercelProject>(`/v9/projects/${name}`);
   } catch (error) {
     if (!(error instanceof HttpError && error.status === 404)) throw error;
+    // Create with the name only: the create endpoint accepts fewer settings than the update
+    // below, which applies all of them.
     project = await vercel<VercelProject>("/v11/projects", {
       method: "POST",
-      body: JSON.stringify({ name, ...settings }),
+      body: JSON.stringify({ name }),
     });
     console.info(`Created Vercel project ${name}`);
   }
