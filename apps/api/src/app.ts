@@ -9,6 +9,7 @@ import { errorHandler, HttpError, notFound } from "./errors";
 import { rateLimitPerMinute } from "./http/rate-limit";
 import { ProfileRepository } from "./repositories/profile";
 import { ProjectRepository } from "./repositories/projects";
+import { docsRouter } from "./routes/docs";
 import { healthRouter } from "./routes/health";
 import { profileRouter } from "./routes/profile";
 import { projectsRouter } from "./routes/projects";
@@ -90,6 +91,7 @@ export function createApp(config: Config = loadConfig(), deps: AppDependencies =
       checkDatabase: sequelize ? () => sequelize.authenticate({ logging: false }) : undefined,
     }),
   );
+  app.use(docsRouter());
   app.use("/v1", v1Router(config, sequelize));
 
   app.use(notFound);

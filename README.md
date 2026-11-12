@@ -145,6 +145,8 @@ If port 5432 is already taken by a local PostgreSQL, publish the container on an
 | `GET /v1/profile`                          | The résumé: headline, experience, skills, certifications, education  |
 | `GET /v1/profile/cv.pdf`                   | The same résumé as a downloadable A4 PDF                             |
 | `GET /health`                              | Liveness; `?deep=1` also checks the database                         |
+| `GET /docs`                                | Interactive documentation, where every endpoint can be tried         |
+| `GET /openapi.json`                        | The OpenAPI 3.1 document                                             |
 
 Each route reads through a service, which reads through a repository, so HTTP, shaping and SQL each
 live in one place ([`apps/api/src`](apps/api/src)). Response shapes are Zod schemas in
@@ -158,28 +160,34 @@ live in one place ([`apps/api/src`](apps/api/src)). Response shapes are Zod sche
 - **Rate limit.** `RATE_LIMIT_PER_MINUTE` requests per client per minute on `/v1` (default 60), with
   standard `RateLimit` headers and `Retry-After` on a 429.
 - **Logs.** One JSON line per request with its id, method, URL and status: no headers, cookies or IPs.
+- **Contract.** The OpenAPI document is built from the same Zod schemas the routes validate with,
+  and committed as [`apps/api/openapi.json`](apps/api/openapi.json) so contract changes show in
+  review. Tests check every response (status, content type, headers and body) against it, fail if
+  any documented response is never produced, and fail if the committed file is out of date
+  (`npm run openapi -w @starsagitarian/api` regenerates it).
 - **CV PDF.** Drawn by a small built-in PDF writer using the standard Helvetica fonts, so it needs no
   extra packages and comes to about 6 KB. It shows no phone number, email or postal address.
 
 ## Scripts
 
-| Command               | Does                                                             |
-| --------------------- | ---------------------------------------------------------------- |
-| `npm run dev`         | Runs the web app and the API together, reloading on change       |
-| `npm run build`       | Builds every package                                             |
-| `npm run lint`        | ESLint (strict, type-aware) across the repo                      |
-| `npm run typecheck`   | TypeScript in strict mode across the repo                        |
-| `npm test`            | All Vitest tests, including database tests (needs Docker)        |
-| `npm run test:unit`   | Unit and API tests only, no Docker needed                        |
-| `npm run test:db`     | Database tests against PostgreSQL 17 started by Testcontainers   |
-| `npm run test:e2e`    | Browser tests (Playwright); run `npx playwright install` once    |
-| `npm run db:migrate`  | Applies pending migrations                                       |
-| `npm run db:rollback` | Undoes the latest migration (`-- --all` for every one)           |
-| `npm run db:status`   | Lists applied and pending migrations and seeders                 |
-| `npm run db:seed`     | Loads portfolio content                                          |
-| `npm run db:reset`    | Rebuilds the local database from scratch (refused in production) |
-| `npm run format`      | Formats with Prettier                                            |
-| `npm run check`       | Format check, lint, type-check and tests in one go               |
+| Command                                  | Does                                                             |
+| ---------------------------------------- | ---------------------------------------------------------------- |
+| `npm run dev`                            | Runs the web app and the API together, reloading on change       |
+| `npm run build`                          | Builds every package                                             |
+| `npm run lint`                           | ESLint (strict, type-aware) across the repo                      |
+| `npm run typecheck`                      | TypeScript in strict mode across the repo                        |
+| `npm test`                               | All Vitest tests, including database tests (needs Docker)        |
+| `npm run test:unit`                      | Unit and API tests only, no Docker needed                        |
+| `npm run test:db`                        | Database tests against PostgreSQL 17 started by Testcontainers   |
+| `npm run test:e2e`                       | Browser tests (Playwright); run `npx playwright install` once    |
+| `npm run openapi -w @starsagitarian/api` | Regenerates the committed OpenAPI document                       |
+| `npm run db:migrate`                     | Applies pending migrations                                       |
+| `npm run db:rollback`                    | Undoes the latest migration (`-- --all` for every one)           |
+| `npm run db:status`                      | Lists applied and pending migrations and seeders                 |
+| `npm run db:seed`                        | Loads portfolio content                                          |
+| `npm run db:reset`                       | Rebuilds the local database from scratch (refused in production) |
+| `npm run format`                         | Formats with Prettier                                            |
+| `npm run check`                          | Format check, lint, type-check and tests in one go               |
 
 Git hooks format staged files on commit, and run lint, type-check and unit tests before each push.
 

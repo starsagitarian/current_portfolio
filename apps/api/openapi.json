@@ -1,0 +1,1072 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "starsagitarian API",
+    "version": "0.1.0",
+    "summary": "The content API behind starsagitarian.vercel.app.",
+    "description": "Projects and the résumé of Baiju Joseph, served from PostgreSQL. Responses are cached at the CDN, errors use RFC 9457 problem details, and each client may make a limited number of requests a minute.",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "This server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Projects",
+      "description": "Portfolio projects."
+    },
+    {
+      "name": "Profile",
+      "description": "The résumé, as JSON or PDF."
+    },
+    {
+      "name": "Health",
+      "description": "Service checks."
+    }
+  ],
+  "paths": {
+    "/v1/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "tags": ["Projects"],
+        "summary": "List projects",
+        "description": "Published projects in their curated order, or best match first when searching. Filter by tag, search the text and page through the results.",
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "Only projects with this tag, by slug (for example `cloud`).",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "maxLength": 40
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Words to search for in titles, organisations, summaries and write-ups. Supports \"quoted phrases\", `or` and `-excluded` words.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 12
+            }
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "description": "An ETag from an earlier response, to get a 304 if nothing has changed.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of projects.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Cached for 5 minutes by browsers and an hour by the CDN, then served stale for up to a day while it refreshes.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "Version of the response; send it back in If-None-Match to get a 304.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit": {
+                "description": "Requests left in the current window (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "The limit and window that apply (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectList"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not modified: the copy named in If-None-Match is current."
+          },
+          "400": {
+            "description": "A query parameter is invalid; the detail names it.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests from this client in the last minute.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database is not configured or cannot be reached.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/{slug}": {
+      "get": {
+        "operationId": "getProject",
+        "tags": ["Projects"],
+        "summary": "Get a project",
+        "description": "One published project with its full write-up.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "maxLength": 80
+            },
+            "example": "lightning-observation"
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "description": "An ETag from an earlier response, to get a 304 if nothing has changed.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The project.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Cached for 5 minutes by browsers and an hour by the CDN, then served stale for up to a day while it refreshes.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "Version of the response; send it back in If-None-Match to get a 304.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit": {
+                "description": "Requests left in the current window (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "The limit and window that apply (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetail"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not modified: the copy named in If-None-Match is current."
+          },
+          "404": {
+            "description": "No published project has that slug.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests from this client in the last minute.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database is not configured or cannot be reached.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profile": {
+      "get": {
+        "operationId": "getProfile",
+        "tags": ["Profile"],
+        "summary": "Get the résumé",
+        "description": "Headline, experience, skills, certifications and education. Dates are months (`YYYY-MM`).",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "description": "An ETag from an earlier response, to get a 304 if nothing has changed.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The résumé.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Cached for 5 minutes by browsers and an hour by the CDN, then served stale for up to a day while it refreshes.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "Version of the response; send it back in If-None-Match to get a 304.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit": {
+                "description": "Requests left in the current window (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "The limit and window that apply (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not modified: the copy named in If-None-Match is current."
+          },
+          "404": {
+            "description": "No profile has been set up.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests from this client in the last minute.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database is not configured or cannot be reached.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/profile/cv.pdf": {
+      "get": {
+        "operationId": "getCv",
+        "tags": ["Profile"],
+        "summary": "Download the CV",
+        "description": "The résumé as an A4 PDF, drawn from the same data as `GET /v1/profile`. It contains no phone number, email address or postal address.",
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "description": "An ETag from an earlier response, to get a 304 if nothing has changed.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The CV as a file download.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Cached for 5 minutes by browsers and an hour by the CDN, then served stale for up to a day while it refreshes.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "Version of the response; send it back in If-None-Match to get a 304.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit": {
+                "description": "Requests left in the current window (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "RateLimit-Policy": {
+                "description": "The limit and window that apply (IETF draft-8 format).",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Disposition": {
+                "description": "`attachment` with the file name.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/pdf": {}
+            }
+          },
+          "304": {
+            "description": "Not modified: the copy named in If-None-Match is current."
+          },
+          "404": {
+            "description": "No profile has been set up.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests from this client in the last minute.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "description": "Seconds to wait before trying again.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database is not configured or cannot be reached.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "tags": ["Health"],
+        "summary": "Check the service",
+        "description": "A cheap liveness check. With `deep=1` it also checks the database, which wakes it if it is asleep.",
+        "parameters": [
+          {
+            "name": "deep",
+            "in": "query",
+            "description": "`1` or `true` to check the database too.",
+            "schema": {
+              "type": "string",
+              "enum": ["1", "true"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The service is up (and so is the database, on a deep check).",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Deep check only: the database is not configured or cannot be reached.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Always `no-store`: errors are never cached.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProjectList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectSummary"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["items", "page", "pageSize", "total", "totalPages"],
+        "additionalProperties": false
+      },
+      "ProjectSummary": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "organisation": {
+            "type": ["string", "null"]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          },
+          "technologies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "repoUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverImage": {
+            "type": ["string", "null"]
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "organisation",
+          "summary",
+          "featured",
+          "tags",
+          "technologies",
+          "repoUrl",
+          "liveUrl",
+          "coverImage",
+          "publishedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ProjectDetail": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "organisation": {
+            "type": ["string", "null"]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          },
+          "technologies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "repoUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "liveUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverImage": {
+            "type": ["string", "null"]
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "organisation",
+          "summary",
+          "featured",
+          "tags",
+          "technologies",
+          "repoUrl",
+          "liveUrl",
+          "coverImage",
+          "publishedAt",
+          "body"
+        ],
+        "additionalProperties": false
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": ["slug", "label"],
+        "additionalProperties": false
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "website": {
+                "type": "string",
+                "format": "uri"
+              },
+              "github": {
+                "type": "string",
+                "format": "uri"
+              },
+              "linkedin": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": ["website", "github", "linkedin"],
+            "additionalProperties": false
+          },
+          "experience": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Experience"
+            }
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillGroup"
+            }
+          },
+          "certifications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Certification"
+            }
+          },
+          "education": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Education"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "title",
+          "location",
+          "tagline",
+          "summary",
+          "links",
+          "experience",
+          "skills",
+          "certifications",
+          "education"
+        ],
+        "additionalProperties": false
+      },
+      "Experience": {
+        "type": "object",
+        "properties": {
+          "organisation": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["organisation", "role", "location", "start", "end", "highlights"],
+        "additionalProperties": false
+      },
+      "SkillGroup": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["category", "skills"],
+        "additionalProperties": false
+      },
+      "Certification": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "issued": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+          },
+          "credentialUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["name", "issuer", "issued", "credentialUrl"],
+        "additionalProperties": false
+      },
+      "Education": {
+        "type": "object",
+        "properties": {
+          "institution": {
+            "type": "string"
+          },
+          "qualification": {
+            "type": "string"
+          },
+          "location": {
+            "type": ["string", "null"]
+          },
+          "endYear": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["institution", "qualification", "location", "endYear"],
+        "additionalProperties": false
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok"
+          },
+          "service": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "database": {
+            "type": "string",
+            "const": "up"
+          }
+        },
+        "required": ["status", "service", "version", "time"],
+        "additionalProperties": false
+      },
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "default": "about:blank",
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          }
+        },
+        "required": ["type", "title", "status"],
+        "additionalProperties": false
+      }
+    }
+  }
+}
