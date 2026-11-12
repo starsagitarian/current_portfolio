@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SKY_MANUAL_EVENT } from "@/components/scene/ScenePlates";
 import { skyForWidth, skyLabel } from "@/components/scene/sky";
 
 /**
@@ -54,6 +55,8 @@ export function SkyPanel() {
           value={sky}
           onChange={(e) => {
             setOverride(Number(e.target.value));
+            // a hand-picked light can show any layer, so load them all
+            window.dispatchEvent(new Event(SKY_MANUAL_EVENT));
           }}
           aria-valuetext={skyLabel(sky)}
         />

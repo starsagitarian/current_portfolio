@@ -1,0 +1,180 @@
+/*
+ * The painted backdrop covers the screen. On wide screens it keeps the promenade in view and
+ * trims sky from the top (anchored 80% down); on tall screens it trims the sides evenly.
+ * Effects are positioned in percentages of the painting, so they stay on their landmarks.
+ */
+.plates {
+  --a: 1.7768; /* 3344 / 1882 */
+  position: absolute;
+  left: 50%;
+  width: max(100vw, 100vh * var(--a));
+  width: max(100vw, 100dvh * var(--a));
+  aspect-ratio: 3344 / 1882;
+  top: calc(min(0px, 100vh - 100vw / var(--a)) * 0.8);
+  top: calc(min(0px, 100dvh - 100vw / var(--a)) * 0.8);
+  translate: -50% 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.plate,
+.plate img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.plate img {
+  object-fit: cover;
+}
+/* day sits underneath; dusk fades in over it, then night over dusk */
+.plate-dusk {
+  opacity: var(--t1);
+}
+.plate-night {
+  opacity: var(--t2);
+}
+
+.fx,
+.fx-clouds-strip {
+  position: absolute;
+  inset: 0;
+}
+.fx span {
+  position: absolute;
+}
+.fx-portrait {
+  display: none;
+}
+
+/* phones held upright use the tall daylight painting and its own landmarks */
+@media (max-width: 560px) and (orientation: portrait) {
+  .plates:not([data-all]) {
+    --a: 0.5628; /* 1882 / 3344 */
+    aspect-ratio: 1882 / 3344;
+  }
+  .plates:not([data-all]) .fx-landscape {
+    display: none;
+  }
+  .plates:not([data-all]) .fx-portrait {
+    display: block;
+  }
+}
+
+/* drifting cloud wisps: soft, low and always in the sky band */
+.fx-clouds {
+  opacity: calc(0.42 - var(--t2) * 0.2);
+}
+.fx-clouds-strip {
+  width: 200%;
+  animation: plates-drift 210s linear infinite;
+  will-change: transform;
+}
+.fx-clouds span {
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--cloud) 80%, transparent),
+    color-mix(in oklch, var(--cloud) 25%, transparent) 60%,
+    transparent
+  );
+}
+
+/* stars come out after dusk */
+.fx-stars {
+  opacity: calc(var(--t2) * 0.95);
+}
+.fx-stars span {
+  border-radius: 50%;
+  background: #fff6dc;
+  box-shadow: 0 0 4px #ffe6a8;
+  animation: plates-twinkle 4.2s ease-in-out infinite;
+}
+.fx-stars span:nth-child(3n) {
+  animation-duration: 5.6s;
+}
+.fx-stars span:nth-child(4n + 1) {
+  animation-duration: 3.4s;
+}
+
+/* glints on the water: white by day, gold after dark */
+.fx-river {
+  opacity: calc(0.65 + var(--t1) * 0.2 + var(--t2) * 0.15);
+}
+.fx-river span {
+  height: 0.34%;
+  min-height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--shimmer), transparent);
+  opacity: 0;
+  animation: plates-glint 6s ease-in-out infinite;
+}
+
+/* lamp glow: off by day, warming at dusk, full at night */
+.fx-lamps span {
+  width: 13%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  opacity: var(--lights-on);
+}
+.fx-lamps i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 224 156 / 0.6),
+    rgb(255 196 112 / 0.22) 45%,
+    transparent
+  );
+  animation: plates-flicker 3.2s ease-in-out infinite;
+}
+.fx-lamps span:nth-child(2) i {
+  animation-duration: 3.9s;
+  animation-delay: -1.4s;
+}
+
+@keyframes plates-drift {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes plates-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+@keyframes plates-glint {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateX(-35%) scaleX(0.5);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateX(35%) scaleX(1);
+  }
+}
+@keyframes plates-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.8;
+  }
+  55% {
+    opacity: 0.94;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plates * {
+    animation: none !important;
+  }
+}

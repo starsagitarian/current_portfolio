@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { site } from "@starsagitarian/shared";
 import { Character } from "@/components/character/Character";
-import { LondonScene } from "@/components/scene/LondonScene";
+import { ScenePlates } from "@/components/scene/ScenePlates";
 import { SKY_INIT_SCRIPT } from "@/components/scene/sky";
 import { SkyPanel } from "./SkyPanel";
 import "./prototype.css";
 
-// SP-6 art prototype: the scene, the character and the brand mark, for review before the real
+// Art prototype: the painted scene, the character and the brand mark, for review before the real
 // pages are built on them. Not linked from the site and kept out of search results.
 export const metadata: Metadata = {
   title: "Art prototype",
@@ -17,7 +17,7 @@ export default function PrototypePage() {
   return (
     <main className="proto">
       <script dangerouslySetInnerHTML={{ __html: SKY_INIT_SCRIPT }} />
-      <LondonScene className="proto-scene" />
+      <ScenePlates />
       <header className="proto-header">
         <span className="proto-badge">
           {/* A pre-optimised static file; skips Vercel's image service and its monthly quota. */}

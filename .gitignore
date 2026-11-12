@@ -29,3 +29,6 @@ npm-debug.log*
 *.log
 .DS_Store
 *.pem
+
+# original art, kept out of the repo
+/art-source/

@@ -13,6 +13,23 @@
   pointer-events: none;
 }
 
+/* a soft contact shadow, so he stands on the paving rather than floating over it */
+.character::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -1.6%;
+  height: 4.2%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(18 14 28 / 0.5),
+    rgb(18 14 28 / 0.18) 60%,
+    transparent
+  );
+}
+
 .character-body {
   position: relative;
   width: 100%;

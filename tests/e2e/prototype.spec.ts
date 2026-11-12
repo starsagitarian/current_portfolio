@@ -1,12 +1,23 @@
 import { expect, test } from "@playwright/test";
 
-// SP-6 art prototype: the scene, the character and the light that follows the window width.
+// Art prototype: the painted scene, the character and the light that follows the window width.
 test("art prototype shows the scene, the character and the right light for the width", async ({
   page,
 }) => {
   await page.goto("/prototype");
 
-  await expect(page.locator("svg.london-scene")).toBeVisible();
+  await expect(page.locator(".plates")).toBeVisible();
+  // only the layers this width can show are downloaded; the rest stay a blank pixel
+  const loaded = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLImageElement>(".plate img")].map((img) => ({
+      layer: img.closest("picture")?.className ?? "",
+      src: img.currentSrc,
+      ok: img.complete,
+    })),
+  );
+  const real = loaded.filter((l) => l.src.includes("/art/scene/"));
+  expect(real.length).toBeGreaterThan(0);
+  expect(real.length).toBeLessThanOrEqual(2);
   await expect(page.locator(".character img")).toBeVisible();
   await expect(page.locator(".character-eyes")).toBeVisible();
 

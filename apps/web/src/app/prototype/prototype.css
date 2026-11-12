@@ -21,19 +21,6 @@
   color: var(--ui-ink);
 }
 
-/*
- * Framing: cover the screen on landscape screens; on tall ones keep the whole of Tower Bridge in
- * view (about 700 of the scene's 1600 units wide) and let the sky continue above it.
- */
-.proto-scene {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: max(100vw, min(177.78vh, 230vw));
-  aspect-ratio: 16 / 9;
-  translate: -50% 0;
-}
-
 .proto-header,
 .sky-panel {
   position: absolute;
@@ -149,7 +136,7 @@
 }
 
 /* "Pause motion" in the panel */
-[data-motion-paused] .london-scene *,
+[data-motion-paused] .plates *,
 [data-motion-paused] .character-body {
   animation-play-state: paused !important;
 }
