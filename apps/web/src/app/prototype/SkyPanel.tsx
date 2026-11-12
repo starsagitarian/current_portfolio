@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { SKY_MANUAL_EVENT } from "@/components/scene/ScenePlates";
-import { skyForWidth, skyLabel } from "@/components/scene/sky";
+import { setManualSky, skyForWidth, skyLabel } from "@/sky/sky";
 
 /**
- * Follows the window width (one update per animation frame while resizing) and offers a slider
- * to preview any light on any device. Prototype-only controls; SP-10 keeps just the follower.
+ * A slider to preview any light on any device. The site-wide follower keeps the light in step
+ * with the width; moving the slider fixes it by hand until "Follow width" hands it back.
  */
 export function SkyPanel() {
   const [width, setWidth] = useState(0);
@@ -32,15 +32,23 @@ export function SkyPanel() {
   }, []);
 
   useEffect(() => {
-    if (width) document.documentElement.style.setProperty("--sky", sky.toFixed(3));
-  }, [sky, width]);
+    if (override !== null) setManualSky(override);
+  }, [override]);
+
+  // Leaving the page hands the light back to the width.
+  useEffect(
+    () => () => {
+      setManualSky(null);
+    },
+    [],
+  );
 
   useEffect(() => {
     document.documentElement.toggleAttribute("data-motion-paused", paused);
   }, [paused]);
 
   return (
-    <aside className="sky-panel" aria-label="Prototype controls">
+    <aside className="sky-panel surface" aria-label="Prototype controls">
       <p className="sky-panel-title">
         <span>Art prototype</span>
         <span className="sky-panel-phase">{skyLabel(sky)}</span>
@@ -70,6 +78,7 @@ export function SkyPanel() {
           type="button"
           onClick={() => {
             setOverride(null);
+            setManualSky(null);
           }}
           disabled={override === null}
         >

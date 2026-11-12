@@ -184,6 +184,23 @@ live in one place ([`apps/api/src`](apps/api/src)). Response shapes are Zod sche
 - **CV PDF.** Drawn by a small built-in PDF writer using the standard Helvetica fonts, so it needs no
   extra packages and comes to about 6 KB. It shows no phone number, email or postal address.
 
+## The light
+
+The whole site follows one number, `--sky`, set on `<html>` from the window width: 0 is daylight
+(phones, up to 560 px), 1 is dusk (768–1100 px) and 2 is blue hour (1280 px and wider), with
+smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
+
+- **No flash.** A small inline script in `<head>` sets it before first paint. Without JavaScript,
+  media queries give the three pure lights.
+- **Smooth resizing.** One update per animation frame, changing only that variable: sweeping
+  from daylight to blue hour holds 60 frames a second.
+- **Tokens.** Every colour in [`tokens.css`](apps/web/src/sky/tokens.css) is blended in OKLCH. Cards
+  ease from cream to navy glass while text flips from dark to light halfway through the evening,
+  so nothing passes through grey on grey. A browser test measures WCAG contrast at every 10 px
+  from 320 to 1920 px, with each card laid over both black and white.
+- **The scene.** Three aligned paintings fade into one another with the light, and each screen
+  downloads only the one it shows (at most about 260 KB on a phone, tablet or desktop).
+
 ## Scripts
 
 | Command                                  | Does                                                             |

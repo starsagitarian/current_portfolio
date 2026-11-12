@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { site } from "@starsagitarian/shared";
 import { Character } from "@/components/character/Character";
 import { ScenePlates } from "@/components/scene/ScenePlates";
-import { SKY_INIT_SCRIPT } from "@/components/scene/sky";
 import { SkyPanel } from "./SkyPanel";
 import "./prototype.css";
 
@@ -16,9 +15,8 @@ export const metadata: Metadata = {
 export default function PrototypePage() {
   return (
     <main className="proto">
-      <script dangerouslySetInnerHTML={{ __html: SKY_INIT_SCRIPT }} />
       <ScenePlates />
-      <header className="proto-header">
+      <header className="proto-header surface">
         <span className="proto-badge">
           {/* A pre-optimised static file; skips Vercel's image service and its monthly quota. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}

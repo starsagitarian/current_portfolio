@@ -1,0 +1,118 @@
+/*
+ * Design tokens that follow the light. --sky runs from 0 (daylight, phones) through 1 (dusk,
+ * tablets) to 2 (blue hour, desktops); see sky.ts. Every colour is blended in OKLCH, so the
+ * in-between shades stay vivid instead of going grey.
+ */
+
+/*
+ * Without JavaScript the three pure lights come from the width alone. With it, the inline script
+ * in <head> and the follower set exact in-between values on <html>, which win over these.
+ * The breakpoints must match SKY_STOPS (a unit test checks).
+ */
+:root {
+  --sky: 0;
+}
+@media (min-width: 768px) {
+  :root {
+    --sky: 1;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --sky: 2;
+  }
+}
+
+:root {
+  /* each half of the range as 0..1: day -> dusk, then dusk -> night */
+  --t1: clamp(0, var(--sky), 1);
+  --t2: clamp(0, calc(var(--sky) - 1), 1);
+  --mix-a: calc(var(--t1) * 100%);
+  --mix-b: calc(var(--t2) * 100%);
+
+  /*
+   * Halfway through the evening, text flips from dark to light in one step, while surfaces ease
+   * on either side of it. Easing both together would pass through grey on grey.
+   */
+  --night-ui: clamp(0, calc((var(--t2) - 0.5) * 1000), 1);
+  --before-flip: clamp(0, calc(var(--t2) * 2), 1);
+  --after-flip: clamp(0, calc((var(--t2) - 0.5) * 2), 1);
+
+  /* ---- Scene: the open sky at the top of each painting, and the effects drawn over them */
+  --sky-top: color-mix(
+    in oklch,
+    color-mix(in oklch, #58aefb, #9283b1 var(--mix-a)),
+    #073d9c var(--mix-b)
+  );
+  --cloud: color-mix(
+    in oklch,
+    color-mix(in oklch, #ffffff, #ffb58c var(--mix-a)),
+    #2f3668 var(--mix-b)
+  );
+  --shimmer: color-mix(
+    in oklch,
+    color-mix(in oklch, #ffffff, #ffd08a var(--mix-a)),
+    #ffd27a var(--mix-b)
+  );
+  /* how lit the city is: off by day, partly at dusk, full at night */
+  --lights-on: calc(var(--t1) * 0.45 + var(--t2) * 0.55);
+
+  /*
+   * ---- Surfaces and text. Cream cards with navy ink by day and dusk; navy glass with light ink
+   * at night. The values are chosen so ink and muted ink keep a WCAG contrast of at least 4.5:1
+   * everywhere, with the card over pure black or pure white; an end-to-end test measures it.
+   */
+  --surface-light: color-mix(
+    in oklch,
+    color-mix(in oklch, oklch(0.975 0.012 85), oklch(0.95 0.03 65) var(--mix-a)),
+    oklch(0.74 0.03 290) calc(var(--before-flip) * 100%)
+  );
+  --surface-dark: color-mix(
+    in oklch,
+    oklch(0.33 0.06 275),
+    oklch(0.25 0.06 268) calc(var(--after-flip) * 100%)
+  );
+  --surface-solid: color-mix(
+    in oklch,
+    var(--surface-light),
+    var(--surface-dark) calc(var(--night-ui) * 100%)
+  );
+  --surface: color-mix(in oklch, var(--surface-solid) 92%, transparent);
+
+  --ink: color-mix(
+    in oklch,
+    oklch(0.24 0.05 262),
+    oklch(0.97 0.01 85) calc(var(--night-ui) * 100%)
+  );
+  --ink-muted: color-mix(
+    in oklch,
+    oklch(0.32 0.04 262),
+    oklch(0.91 0.02 262) calc(var(--night-ui) * 100%)
+  );
+  --line: color-mix(in oklch, var(--ink) 16%, transparent);
+
+  /* the star on the cap: active tabs and focus rings, always with dark ink on it */
+  --accent: #e7a83b;
+  --accent-ink: oklch(0.24 0.05 262);
+  --shadow: 0 10px 30px rgb(10 15 40 / 0.18);
+}
+
+/* A card, header or panel over the scene. */
+.surface {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  /* smooths the flip at mid-evening while the window is dragged across it */
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface {
+    transition: none;
+  }
+}

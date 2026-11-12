@@ -1,5 +1,6 @@
 /**
- * Viewport width -> --sky. 0 = daylight (phones), 1 = dusk (tablets), 2 = blue hour (desktops),
+ * The light. One number, --sky, set on <html>, drives every colour, painting and position on the
+ * site. Viewport width -> --sky. 0 = daylight (phones), 1 = dusk (tablets), 2 = blue hour (desktops),
  * with eased blends in between:
  *
  *   <= 560 px  0        560-768  0 -> 1      768-1100  1        1100-1280  1 -> 2      >= 1280  2
@@ -29,4 +30,21 @@ export function skyLabel(sky: number): string {
   if (sky < 1.15) return "Dusk";
   if (sky < 1.85) return "Lights on";
   return "Blue hour";
+}
+
+/** On <html> while the light is set by hand (the prototype's slider): the follower then waits. */
+export const SKY_MANUAL_ATTRIBUTE = "data-sky-manual";
+
+/** Sets --sky on <html>, skipping the style change when the value is the same. */
+export function applySky(sky: number): void {
+  const root = document.documentElement;
+  const value = sky.toFixed(3);
+  if (root.style.getPropertyValue("--sky") !== value) root.style.setProperty("--sky", value);
+}
+
+/** Fixes the light at a value, or (null) hands it back to the window width. */
+export function setManualSky(sky: number | null): void {
+  const root = document.documentElement;
+  root.toggleAttribute(SKY_MANUAL_ATTRIBUTE, sky !== null);
+  applySky(sky ?? skyForWidth(window.innerWidth));
 }

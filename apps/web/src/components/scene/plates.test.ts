@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LANDSCAPE, LAYER_MEDIA, PORTRAIT, srcSet } from "./plates";
-import { skyForWidth } from "./sky";
+import { skyForWidth } from "../../sky/sky";
 
 /** Evaluates the simple min-width / max-width queries used by the layers. */
 function matches(query: string, width: number) {

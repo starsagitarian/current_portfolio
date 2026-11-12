@@ -11,7 +11,6 @@ import {
   PORTRAIT_SIZES,
   srcSet,
 } from "./plates";
-import "./scene.css";
 import "./plates.css";
 
 /** Fired when the light is set by hand (the prototype slider): every layer must then be loaded. */
