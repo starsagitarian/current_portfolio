@@ -1,0 +1,58 @@
+/*
+ * Position follows the light: centre on phones (day), left on tablets (dusk), right on desktops
+ * (blue hour). It reads the same --t1/--t2 as the scene, so the character glides between them
+ * as the window is resized.
+ */
+.character {
+  position: absolute;
+  bottom: 2.5vh;
+  left: calc(50% - var(--t1) * 24% + var(--t2) * 50%);
+  height: clamp(300px, 64vh, 780px);
+  aspect-ratio: 579 / 1343;
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+.character-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  animation: character-breathe 4s ease-in-out infinite;
+}
+
+.character picture,
+.character img,
+.character-eyes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.character-pupil {
+  transition: transform 220ms ease-out;
+}
+.character-lid {
+  transition: transform 90ms ease-in;
+}
+
+@keyframes character-breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.012) scaleX(1.004);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-body {
+    animation: none;
+  }
+  .character-pupil,
+  .character-lid {
+    transition: none;
+  }
+}

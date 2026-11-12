@@ -20,7 +20,7 @@
     "lint": "eslint . && npm run lint -w @starsagitarian/web",
     "typecheck": "tsc --noEmit -p tsconfig.json && npm run typecheck --workspaces --if-present",
     "test": "vitest run",
-    "test:unit": "vitest run --project shared --project api",
+    "test:unit": "vitest run --project shared --project api --project web",
     "test:db": "vitest run --project api-db",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

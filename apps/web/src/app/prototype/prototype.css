@@ -1,0 +1,155 @@
+.proto {
+  /* 0 until deep into the evening, then 1: chrome flips from light cards to night glass */
+  --night-ui: clamp(0, calc((var(--t2) - 0.5) * 1000), 1);
+  --ui-bg: color-mix(
+    in oklch,
+    rgb(251 246 236 / 0.9),
+    rgb(13 23 54 / 0.72) calc(var(--night-ui) * 100%)
+  );
+  --ui-ink: color-mix(in oklch, #0f1d3a, #f4f1ea calc(var(--night-ui) * 100%));
+  --ui-line: color-mix(
+    in oklch,
+    rgb(15 29 58 / 0.15),
+    rgb(244 241 234 / 0.22) calc(var(--night-ui) * 100%)
+  );
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  /* the sky carries on above the scene on tall screens */
+  background: var(--sky-top);
+  color: var(--ui-ink);
+}
+
+/*
+ * Framing: cover the screen on landscape screens; on tall ones keep the whole of Tower Bridge in
+ * view (about 700 of the scene's 1600 units wide) and let the sky continue above it.
+ */
+.proto-scene {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: max(100vw, min(177.78vh, 230vw));
+  aspect-ratio: 16 / 9;
+  translate: -50% 0;
+}
+
+.proto-header,
+.sky-panel {
+  position: absolute;
+  z-index: 1;
+  background: var(--ui-bg);
+  color: var(--ui-ink);
+  border: 1px solid var(--ui-line);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgb(10 15 40 / 0.18);
+  backdrop-filter: blur(10px);
+}
+
+.proto-header {
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 10px 10px;
+}
+
+.proto-badge {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fbf3e4;
+  box-shadow: inset 0 0 0 1px rgb(15 29 58 / 0.08);
+}
+.proto-badge img {
+  width: 40px;
+  height: auto;
+}
+
+.proto-name {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.proto-title {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.sky-panel {
+  top: 16px;
+  right: 16px;
+  width: min(300px, calc(100vw - 32px));
+  padding: 12px 14px;
+  font-size: 0.85rem;
+}
+@media (max-width: 640px) {
+  .proto-header {
+    right: 16px;
+  }
+  .sky-panel {
+    top: 96px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    padding: 10px 12px;
+  }
+}
+
+.sky-panel-title {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+}
+.sky-panel-phase {
+  font-weight: 600;
+  opacity: 0.75;
+}
+.sky-panel-row {
+  display: block;
+  margin: 8px 0 4px;
+}
+.sky-panel-row input {
+  width: 100%;
+  accent-color: #e7a83b;
+}
+.sky-panel-meta {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+.sky-panel-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.sky-panel-actions button {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-line);
+  font-weight: 600;
+  cursor: pointer;
+}
+.sky-panel-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.sky-panel-actions button:focus-visible,
+.sky-panel-row input:focus-visible {
+  outline: 3px solid #e7a83b;
+  outline-offset: 2px;
+}
+
+/* "Pause motion" in the panel */
+[data-motion-paused] .london-scene *,
+[data-motion-paused] .character-body {
+  animation-play-state: paused !important;
+}

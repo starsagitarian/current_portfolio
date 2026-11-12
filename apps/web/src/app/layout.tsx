@@ -19,7 +19,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-GB" className={`${lexend.variable} h-full antialiased`}>
+    // The sky script sets --sky on <html> before React loads, so its style is expected to differ.
+    <html lang="en-GB" className={`${lexend.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );

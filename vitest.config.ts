@@ -21,6 +21,14 @@ export default defineConfig({
         },
       },
       {
+        test: {
+          name: "web",
+          root: "apps/web",
+          include: ["src/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
         // Integration tests against a real PostgreSQL 17, started in Docker by Testcontainers.
         test: {
           name: "api-db",
