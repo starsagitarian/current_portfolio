@@ -108,12 +108,12 @@ Free tiers only, with no payment card on any account.
 and both Vercel projects if they are missing, and stores the connection strings as encrypted Vercel
 environment variables. The repository needs:
 
-| Name              | Kind     | Holds                                          |
-| ----------------- | -------- | ---------------------------------------------- |
-| `VERCEL_TOKEN`    | Secret   | Vercel access token                            |
-| `NEON_API_KEY`    | Secret   | Neon API key                                   |
-| `NEON_PROJECT_ID` | Variable | Neon project ID; deploys are skipped until set |
-| `VERCEL_TEAM_ID`  | Variable | Optional: a Vercel team to deploy into         |
+| Name              | Kind               | Holds                                                             |
+| ----------------- | ------------------ | ----------------------------------------------------------------- |
+| `VERCEL_TOKEN`    | Secret             | Vercel access token (expires 12 Nov 2027: replace it before then) |
+| `NEON_API_KEY`    | Secret             | Neon API key                                                      |
+| `NEON_PROJECT_ID` | Variable           | Neon project ID; deploys are skipped until set                    |
+| `VERCEL_TEAM_ID`  | Secret or variable | The Vercel team to deploy into (`team_…`)                         |
 
 ## Getting started (development)
 
