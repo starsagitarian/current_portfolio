@@ -13,6 +13,7 @@ import { createApp } from "../../src/app";
 import { loadConfig } from "../../src/config";
 import { connectDatabase, initModels, Profile, Project } from "../../src/db";
 import * as content from "../../src/db/seeders/content";
+import { profileFromSeed } from "../../src/db/seeders/profile-from-seed";
 import { CONTENT_CACHE_CONTROL } from "../../src/http/cache";
 import { pdfLines } from "../helpers/pdf";
 import { PRIVATE_DETAILS } from "../helpers/profile";
@@ -202,6 +203,11 @@ describe("GET /v1/profile", () => {
     expect(profile.certifications[0]?.issued).toBe("2025-06");
     expect(profile.links.github).toBe("https://github.com/starsagitarian");
     expect(res.headers["cache-control"]).toBe(CONTENT_CACHE_CONTROL);
+  });
+
+  it("serves exactly the seed content, as the web app's fallback copy has it", async () => {
+    const res = await request(app).get("/v1/profile").expect(200);
+    expect(res.body).toEqual(profileFromSeed());
   });
 
   it("publishes no email address or phone number", async () => {

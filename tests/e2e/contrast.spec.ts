@@ -141,6 +141,13 @@ async function judge({ png, boxes }: { png: string; boxes: TextBox[] }): Promise
 }
 
 async function measure(page: Page): Promise<string[]> {
+  // A new width can bring a different painting: wait for it (and the fonts) before reading the
+  // pixels, or the text would be judged against a background that is still arriving.
+  await page.waitForFunction(
+    () =>
+      document.fonts.status === "loaded" &&
+      [...document.querySelectorAll<HTMLImageElement>(".plate img")].every((img) => img.complete),
+  );
   await nextFrame(page);
   const boxes = await page.evaluate(collectText);
   const hide = await page.addStyleTag({ content: HIDE_TEXT });
@@ -174,15 +181,35 @@ test.describe("text contrast against the real painting", () => {
     expect(failures, failures.slice(0, 12).join("\n")).toEqual([]);
   });
 
-  test("every other page, at every 40 px", async ({ browser }) => {
-    const context = await browser.newContext({ reducedMotion: "reduce" });
-    const page = await context.newPage();
-    const failures: string[] = [];
-    for (const path of ["/resume", "/projects", "/contact"]) {
+  // One test per page, so they run side by side and each stays well inside its time limit.
+  for (const path of ["/resume", "/projects", "/contact"]) {
+    test(`${path}, at every 40 px`, async ({ browser }) => {
+      const context = await browser.newContext({ reducedMotion: "reduce" });
+      const page = await context.newPage();
       await page.goto(path);
+      const failures: string[] = [];
       for (let width = 320; width <= 1920; width += 40) {
         await page.setViewportSize({ width, height: 900 });
         failures.push(...(await measure(page)).map((p) => `${path} ${width} px: ${p}`));
+      }
+      await context.close();
+      expect(failures, failures.slice(0, 12).join("\n")).toEqual([]);
+    });
+  }
+
+  test("the résumé, top to bottom, at nine widths", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    const failures: string[] = [];
+    for (const width of [320, 375, 600, 768, 820, 1024, 1200, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/resume");
+      const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < height; y += 640) {
+        await page.evaluate((top) => {
+          window.scrollTo(0, top);
+        }, y);
+        failures.push(...(await measure(page)).map((p) => `résumé ${width} px at ${y}: ${p}`));
       }
     }
     await context.close();

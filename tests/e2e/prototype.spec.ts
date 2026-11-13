@@ -37,6 +37,8 @@ test("art prototype shows the scene, the character and the right light for the w
 
 test("the light slider previews any light", async ({ page }) => {
   await page.goto("/prototype");
+  // wait for the page to come alive (the panel reports the real width once it has)
+  await expect(page.locator(".sky-panel-meta")).toHaveText(/^[1-9]\d* px/);
   await page.getByRole("slider", { name: /light/i }).fill("1");
   await expect(page.getByText("Dusk", { exact: true })).toBeVisible();
   await expect

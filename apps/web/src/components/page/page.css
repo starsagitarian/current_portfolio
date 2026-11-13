@@ -83,3 +83,74 @@
     transition: none;
   }
 }
+
+/*
+ * Dissolving glass: a wash of the light's colour behind long text that fades out towards its
+ * edges, so there is no card and no border, only the painting softened where the words are.
+ * Strong in the middle (the contrast sweep holds every line to WCAG AA against the real
+ * painting), gone at the edges. Deliberately no backdrop blur: a blur under a mask speckles in
+ * Chrome's software renderer, shows a seam otherwise, and is the costliest thing to scroll.
+ */
+.dissolve {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(22px, 3.4vw, 40px) clamp(18px, 3vw, 40px);
+  color: var(--ink);
+}
+.dissolve::before {
+  content: "";
+  position: absolute;
+  inset: -26px -34px;
+  z-index: -1;
+  border-radius: 56px;
+  background-color: var(--veil-strong);
+  background-image: var(--grain);
+  mask-image:
+    linear-gradient(90deg, transparent, #000 56px, #000 calc(100% - 56px), transparent),
+    linear-gradient(transparent, #000 44px, #000 calc(100% - 44px), transparent);
+  mask-composite: intersect;
+  pointer-events: none;
+}
+@media (max-width: 767.98px) {
+  .dissolve::before {
+    inset: -18px -16px;
+    border-radius: 36px;
+    mask-image:
+      linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent),
+      linear-gradient(transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  }
+}
+
+/* Small glass-edged chips for tags and skills. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklch, var(--ink) 6%, transparent);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Short pieces (a heading, a paragraph, one role) rise into place as they scroll into view, done
+   by the time they are fully on screen: the browser's own scroll-driven animations, so no
+   JavaScript. Kept to short pieces, so nothing tall waits half a page to appear. Where
+   unsupported, they are simply there. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 100%;
+  }
+}
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+}

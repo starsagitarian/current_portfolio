@@ -11,20 +11,27 @@ const PAGES = ["/", "/prototype"];
 const COMPOSITED = new Set(["transform", "opacity", "translate", "scale", "rotate"]);
 const KEYFRAME_META = new Set(["offset", "computedOffset", "easing", "composite"]);
 
+/**
+ * The animations that play over time. Scroll-driven ones (the header's frost, sections rising
+ * into view) follow the scroll position instead, so they never loop and are not counted.
+ */
 async function animationsOn(page: Page) {
   return page.evaluate(() =>
-    document.getAnimations().map((animation) => {
-      const effect = animation.effect as KeyframeEffect | null;
-      const target = effect?.target;
-      return {
-        name: (animation as CSSAnimation).animationName,
-        on: target?.className.toString().split(" ")[0] ?? "",
-        state: animation.playState,
-        properties: [
-          ...new Set((effect?.getKeyframes() ?? []).flatMap((frame) => Object.keys(frame))),
-        ],
-      };
-    }),
+    document
+      .getAnimations()
+      .filter((animation) => animation.timeline === document.timeline)
+      .map((animation) => {
+        const effect = animation.effect as KeyframeEffect | null;
+        const target = effect?.target;
+        return {
+          name: (animation as CSSAnimation).animationName,
+          on: target?.className.toString().split(" ")[0] ?? "",
+          state: animation.playState,
+          properties: [
+            ...new Set((effect?.getKeyframes() ?? []).flatMap((frame) => Object.keys(frame))),
+          ],
+        };
+      }),
   );
 }
 

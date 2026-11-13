@@ -70,6 +70,9 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     image: starsagitarian-web:local
+    environment:
+      # The server reaches the API over the compose network.
+      API_URL: http://api:4000
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:

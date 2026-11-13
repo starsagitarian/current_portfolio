@@ -1,0 +1,176 @@
+/*
+ * The résumé: the introduction bare on the sky, then the reading on dissolving glass. One column
+ * on phones and tablets; on desktops the story (about, experience) beside the facts (skills,
+ * certifications, education).
+ */
+.resume {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 7vh, 72px);
+  width: 100%;
+  max-width: 1240px;
+}
+
+.resume-intro {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 3vw, 28px);
+}
+.resume-avatar {
+  width: clamp(76px, 18vw, 104px) !important;
+  height: clamp(76px, 18vw, 104px) !important;
+  box-shadow:
+    0 0 0 1px var(--veil-edge),
+    0 14px 30px -14px rgb(8 12 32 / 0.6);
+}
+.resume-cv-note {
+  align-self: center;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.resume-grid {
+  display: grid;
+  gap: clamp(48px, 8vh, 72px) 64px;
+  margin-inline: clamp(0px, 2vw, 40px);
+}
+@media (min-width: 1100px) {
+  .resume-grid {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.resume-section + .resume-section {
+  margin-top: clamp(36px, 5vh, 52px);
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.section-title svg {
+  flex: none;
+  color: var(--ink-muted);
+}
+.resume-about {
+  max-width: 62ch;
+  font-size: 1.06rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+/* ---- the experience timeline: a gold thread with a glowing bead for each role */
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding-left: 32px;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--accent), color-mix(in oklch, var(--accent) 25%, transparent));
+}
+.timeline-entry {
+  position: relative;
+}
+.timeline-entry::before {
+  content: "";
+  position: absolute;
+  left: -32px;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow:
+    0 0 0 4px color-mix(in oklch, var(--accent) 22%, transparent),
+    0 0 16px color-mix(in oklch, var(--accent) 65%, transparent);
+}
+.timeline-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.timeline-role {
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.timeline-when {
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+.timeline-where {
+  margin-top: 2px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.timeline-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  line-height: 1.55;
+}
+.timeline-highlights li {
+  position: relative;
+  padding-left: 16px;
+  text-wrap: pretty;
+}
+.timeline-highlights li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.68em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+}
+
+/* ---- skills, certifications, education */
+.skill-group + .skill-group {
+  margin-top: 18px;
+}
+.skill-category {
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.facts li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fact-name {
+  font-weight: 700;
+  line-height: 1.35;
+}
+.fact-meta {
+  font-size: 0.92rem;
+  color: var(--ink-muted);
+}

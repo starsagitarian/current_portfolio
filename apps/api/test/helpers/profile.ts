@@ -1,30 +1,9 @@
-import { site, type Profile } from "@starsagitarian/shared";
-import * as content from "../../src/db/seeders/content";
-
-const toMonth = (date: string) => date.slice(0, 7);
+import type { Profile } from "@starsagitarian/shared";
+import { profileFromSeed } from "../../src/db/seeders/profile-from-seed";
 
 /** The seeded profile in its published shape, for tests that need no database. */
 export function seedProfile(): Profile {
-  return {
-    ...content.profile,
-    links: { website: site.url, ...site.links },
-    experience: content.experiences.map((item) => ({
-      organisation: item.organisation,
-      role: item.role,
-      location: item.location,
-      start: toMonth(item.startDate),
-      end: toMonth(item.endDate),
-      highlights: item.highlights,
-    })),
-    skills: Object.entries(content.skills).map(([category, skills]) => ({ category, skills })),
-    certifications: content.certifications.map((item) => ({
-      name: item.name,
-      issuer: item.issuer,
-      issued: toMonth(item.issuedOn),
-      credentialUrl: null,
-    })),
-    education: content.education.map((item) => ({ ...item })),
-  };
+  return profileFromSeed();
 }
 
 /*

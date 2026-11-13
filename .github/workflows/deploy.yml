@@ -113,8 +113,17 @@ jobs:
       - name: Deploy the web app
         id: web
         run: |
+          # The site reads from the API deployed with it: the public domain in production, this
+          # run's own API deployment on previews. Needed while building and while serving.
+          if [ "${{ inputs.environment }}" = production ]; then
+            api_url="https://$API_PROJECT.vercel.app"
+          else
+            api_url="${{ steps.api.outputs.url }}"
+          fi
           url=$(npx --yes "$VERCEL_CLI" deploy --project "$WEB_PROJECT" --archive=tgz \
-            --build-env HUSKY=0 --build-env NEXT_TELEMETRY_DISABLED=1 ${{ steps.vercel.outputs.flags }})
+            --build-env HUSKY=0 --build-env NEXT_TELEMETRY_DISABLED=1 \
+            --build-env API_URL="$api_url" --env API_URL="$api_url" \
+            ${{ steps.vercel.outputs.flags }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       # ---- 4. Smoke test (production uses the public domains, which serve the new deployment)
@@ -140,6 +149,10 @@ jobs:
           echo "contact $contact"
           if [ "$CONTACT_ON" = true ]; then [ "$contact" = 400 ]; else [ "$contact" = 503 ]; fi
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "web %{http_code}\n" "$web"
+          # the résumé page and its CV download, through the site
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$web/resume" | grep -q "Experience"
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "site cv %{http_code} %{content_type}\n" \
+            "$web/resume/cv.pdf" | tee /dev/stderr | grep -q "application/pdf"
           {
             echo "### ${{ inputs.environment }} deployment"
             echo "| | URL |"

@@ -19,7 +19,8 @@
     "db:unseed": "npm run db -- unseed",
     "db:reset": "npm run db -- reset",
     "db:migrate:dist": "node dist/db-cli.js migrate",
-    "openapi": "tsx scripts/openapi.ts"
+    "openapi": "tsx scripts/openapi.ts",
+    "snapshot": "tsx scripts/profile-snapshot.ts"
   },
   "dependencies": {
     "@starsagitarian/shared": "*",

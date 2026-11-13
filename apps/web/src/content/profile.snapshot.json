@@ -1,0 +1,191 @@
+{
+  "name": "Baiju Joseph",
+  "title": "Software & Cloud Engineer",
+  "location": "London",
+  "tagline": "Building thoughtful software with TypeScript, Python and AWS.",
+  "summary": "Software engineer with 5+ years designing, building, testing and supporting cloud services in Python, TypeScript, Node.js and React. I write clean, typed, well-tested code, run the services I build and investigate issues in production. An earlier career in scientific digital products and as a Scrum Product Owner means I start from what users need and work closely with product and delivery colleagues.",
+  "links": {
+    "website": "https://starsagitarian.vercel.app",
+    "github": "https://github.com/starsagitarian",
+    "linkedin": "https://www.linkedin.com/in/baiju-joseph-aws-csm-cspo-8a8aa37/"
+  },
+  "experience": [
+    {
+      "organisation": "Met Office",
+      "role": "Software Engineer",
+      "location": "Exeter",
+      "start": "2026-02",
+      "end": "2026-09",
+      "highlights": [
+        "Built and supported Python services that ingest, transform and validate lightning observations from a European detection network for the Met Office's lightning data products.",
+        "Built and maintained event-driven AWS workflows with Lambda, SQS, S3 and DynamoDB.",
+        "Improved reliability with Behave integration tests, Pytest unit tests and mypy static typing.",
+        "Supported live services: investigated defects, made maintenance changes and tested fixes before release.",
+        "Contributed to CI/CD and infrastructure as code with AWS CDK, GitHub Actions and CodePipeline, and wrote technical documentation."
+      ]
+    },
+    {
+      "organisation": "Innowiz IT Consultancy",
+      "role": "AWS Developer (remote contractor)",
+      "location": "Exton, USA (remote)",
+      "start": "2024-09",
+      "end": "2026-01",
+      "highlights": [
+        "Designed and built SaaS applications with React front ends and Python microservices (FastAPI, Flask) on PostgreSQL and DynamoDB.",
+        "Developed REST and GraphQL APIs for high-volume data processing, with Pandas, NumPy and mypy in the ETL workflows.",
+        "Added logging, monitoring and operational visibility with CloudWatch and CloudTrail.",
+        "Applied Pytest and TDD in CI/CD pipelines, and contributed to AWS Bedrock chatbot applications on serverless infrastructure."
+      ]
+    },
+    {
+      "organisation": "DK Publishing",
+      "role": "Software Engineer (Full Stack and Cloud)",
+      "location": "London",
+      "start": "2021-04",
+      "end": "2023-12",
+      "highlights": [
+        "Led development of the DK Learning / DK Super Readers microsite on React, Next.js, Tailwind CSS, Hygraph and Algolia.",
+        "Built serverless XML-to-JSON and ONIX pipelines on AWS Lambda and S3, saving about six hours of manual work a week and cutting import errors from about 8% to below 3%.",
+        "Designed backend services for Phonic Books with Node.js, Lambda, DynamoDB and Shopify GraphQL APIs to automate sales and inventory.",
+        "Developed event-driven microservices with SQS, EventBridge and resilient error handling; managed deployment pipelines, ECS environments and automated testing with Jest and Cypress."
+      ]
+    },
+    {
+      "organisation": "Sahusoft UK",
+      "role": "Full Stack Engineer (contractor)",
+      "location": "London",
+      "start": "2020-04",
+      "end": "2021-03",
+      "highlights": [
+        "Built Remedic, a multilingual doctor–patient consultation proof of concept, iterating with stakeholders.",
+        "Implemented authentication, chat and onboarding with JWT, Socket.IO, GraphQL, React, TypeScript and Redux.",
+        "Worked across front end, back end and PostgreSQL-backed features."
+      ]
+    },
+    {
+      "organisation": "Bayer (Monsanto India)",
+      "role": "Scrum Product Owner (Field Apps)",
+      "location": "Bengaluru",
+      "start": "2017-06",
+      "end": "2019-04",
+      "highlights": [
+        "Owned the product lifecycle for 8+ mobile and web apps used by scientists in hybrid seed research.",
+        "Led backlog refinement, sprint planning and Jira administration across scientific, business and software teams.",
+        "Delivered product demonstrations and training to users across Europe, North America and Africa."
+      ]
+    },
+    {
+      "organisation": "QIAGEN / BIOBASE / Jubilant Biosys",
+      "role": "Scientific Data and Product Support",
+      "location": "Bengaluru",
+      "start": "2007-07",
+      "end": "2017-05",
+      "highlights": [
+        "Supported scientific software and bioinformatics products, including QIAGEN Ingenuity Pathway Analysis, for researchers worldwide.",
+        "Curated and quality-assured structured biological and disease data for commercial knowledge bases."
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "category": "Languages and frameworks",
+      "skills": [
+        "TypeScript",
+        "JavaScript",
+        "Python",
+        "Node.js",
+        "React",
+        "Next.js",
+        "FastAPI",
+        "Flask",
+        "SQL",
+        "HTML and CSS"
+      ]
+    },
+    {
+      "category": "Cloud and infrastructure",
+      "skills": [
+        "AWS Lambda",
+        "Amazon S3",
+        "Amazon SQS",
+        "Amazon EC2",
+        "Amazon ECS",
+        "AWS CDK",
+        "Docker",
+        "Linux",
+        "NGINX"
+      ]
+    },
+    {
+      "category": "Data and APIs",
+      "skills": [
+        "PostgreSQL",
+        "DynamoDB",
+        "MongoDB",
+        "REST",
+        "GraphQL",
+        "EventBridge",
+        "ETL pipelines",
+        "Pandas",
+        "NumPy"
+      ]
+    },
+    {
+      "category": "Testing and delivery",
+      "skills": [
+        "TDD",
+        "Pytest",
+        "Behave",
+        "mypy",
+        "Jest",
+        "Cypress",
+        "Playwright",
+        "GitHub Actions",
+        "GitLab CI",
+        "AWS CodePipeline"
+      ]
+    },
+    {
+      "category": "Security and operations",
+      "skills": ["IAM", "CloudTrail", "CloudWatch", "JWT"]
+    },
+    {
+      "category": "Ways of working",
+      "skills": ["Scrum", "User stories", "Backlog refinement", "Stakeholder training", "Jira"]
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Certified Developer – Associate (DVA-C02)",
+      "issuer": "Amazon Web Services",
+      "issued": "2025-06",
+      "credentialUrl": null
+    },
+    {
+      "name": "Certified ScrumMaster (CSM)",
+      "issuer": "Scrum Alliance",
+      "issued": "2019-03",
+      "credentialUrl": null
+    },
+    {
+      "name": "Certified Scrum Product Owner (CSPO)",
+      "issuer": "Scrum Alliance",
+      "issued": "2019-02",
+      "credentialUrl": null
+    }
+  ],
+  "education": [
+    {
+      "institution": "Codeworks",
+      "qualification": "Software Engineering Immersive",
+      "location": "City of London",
+      "endYear": null
+    },
+    {
+      "institution": "Bangalore University",
+      "qualification": "MSc Biotechnology",
+      "location": "Bengaluru",
+      "endYear": 2007
+    }
+  ]
+}

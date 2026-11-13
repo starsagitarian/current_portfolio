@@ -20,4 +20,13 @@ html[data-motion-paused] *::after {
   *::after {
     animation: none !important;
   }
+  /* The header's frost follows the scroll position rather than moving anything, and it keeps
+     scrolled text readable beneath the header, so it stays. */
+  @supports (animation-timeline: scroll()) {
+    .site-header::before {
+      animation: header-frost linear both !important;
+      animation-timeline: scroll(root block) !important;
+      animation-range: 0 72px !important;
+    }
+  }
 }

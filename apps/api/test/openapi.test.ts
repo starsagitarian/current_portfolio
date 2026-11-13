@@ -5,6 +5,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { loadConfig } from "../src/config";
+import { profileFromSeed } from "../src/db/seeders/profile-from-seed";
 import { buildOpenApiDocument } from "../src/openapi/document";
 import { DOCS_CACHE_CONTROL } from "../src/routes/docs";
 
@@ -71,5 +72,17 @@ describe("GET /docs", () => {
 
     expect(res.headers["content-type"]).toContain("javascript");
     expect(res.text).toContain('url: "/openapi.json"');
+  });
+});
+
+describe("the web app's fallback profile", () => {
+  it("matches the seed content (run `npm run snapshot -w @starsagitarian/api`)", async () => {
+    const snapshot: unknown = JSON.parse(
+      await readFile(
+        path.resolve(import.meta.dirname, "../../web/src/content/profile.snapshot.json"),
+        "utf8",
+      ),
+    );
+    expect(snapshot).toEqual(profileFromSeed());
   });
 });

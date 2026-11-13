@@ -210,6 +210,11 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
   drawn in the artwork's own pixels, so they stay on the face at every width; he breathes, blinks,
   glances and rolls his eyes, follows the mouse on a desktop, and glides between his phone, tablet
   and desktop places as the light changes.
+- **Résumé.** Built from `GET /v1/profile`, cached for an hour, with a copy of the seed content
+  bundled as a fallback ([`apps/web/src/content`](apps/web/src/content)), so the page renders even
+  when the API is down; a test keeps the copy in step (`npm run snapshot -w @starsagitarian/api`).
+  The CV downloads from the site's own `/resume/cv.pdf`, which fetches it from the API. Set
+  `API_URL` to where the web server reaches the API (compose and the deploy workflow do).
 - **Layout.** Every page sits in one shell ([`apps/web/src/components/shell`](apps/web/src/components/shell)):
   a skip link, the painted scene, a header and the content. Phones and tablets get a menu (a modal
   dialog, so focus stays in it and Escape closes it) and a tab bar; desktops get the sections in
