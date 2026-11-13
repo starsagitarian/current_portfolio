@@ -11,6 +11,9 @@
   flex: 1;
   flex-direction: column;
   min-height: 100dvh;
+  /* Soft scrims reach past the edges by design; clip them so a page never scrolls sideways
+     (on a phone that would zoom the layout out and push the tab bar off screen). */
+  overflow-x: clip;
 }
 
 /* The painted scene stays put behind every page, and through page changes. */

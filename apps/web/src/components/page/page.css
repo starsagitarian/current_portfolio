@@ -1,0 +1,85 @@
+/*
+ * Page intros: bare type over the calm sky near the top of the painting, never over the bridge.
+ * Left-aligned at every size, in line with the home hero on desktops.
+ */
+.page-intro {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  width: min(100%, 620px);
+  margin: 2vh 0 0 clamp(0px, 2vw, 40px);
+}
+/* the same feathered pool as the hero: strong under the words, gone by its edges */
+.page-intro::before {
+  content: "";
+  position: absolute;
+  inset: -22% -6% -30% -12%;
+  z-index: -1;
+  background: radial-gradient(
+    closest-side,
+    var(--scrim) 0%,
+    var(--scrim) 46%,
+    color-mix(in oklch, var(--scrim) 40%, transparent) 72%,
+    transparent
+  );
+  pointer-events: none;
+}
+/* the block is only as wide as its longest line, so the shade hugs the words */
+.page-intro {
+  width: fit-content;
+  max-width: min(100%, 620px);
+}
+.page-title {
+  font-size: clamp(2.7rem, 8vw, 4.6rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+.page-lede {
+  margin-top: 14px;
+  max-width: 34ch;
+  font-size: clamp(1.05rem, 2.6vw, 1.3rem);
+  font-weight: 500;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+/* Buttons used across pages: gold for the main action, glass for the rest. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 24px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-shadow: none;
+  transition:
+    translate 0.25s cubic-bezier(0.2, 0.9, 0.25, 1.2),
+    box-shadow 0.25s ease;
+}
+.button:hover {
+  translate: 0 -2px;
+}
+.button:active {
+  translate: 0 1px;
+}
+.button-gold {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / 0.5) inset,
+    0 12px 28px -10px rgb(150 95 10 / 0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

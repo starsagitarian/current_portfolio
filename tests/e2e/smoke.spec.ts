@@ -13,10 +13,15 @@ test("home page introduces Baiju and links his profiles", async ({ page }) => {
   await expect(page.locator('a[href^="https://www.linkedin.com/in/"]').first()).toBeAttached();
 });
 
-test("page never scrolls sideways", async ({ page }) => {
-  await page.goto("/");
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-  expect(overflow).toBe(0);
-});
+for (const path of ["/", "/resume", "/projects", "/contact"]) {
+  test(`${path} never scrolls sideways`, async ({ page }) => {
+    await page.goto(path);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
+    // and the tab bar, where there is one, is on screen
+    const bar = page.locator(".tab-bar").filter({ visible: true });
+    if ((await bar.count()) > 0) await expect(bar).toBeInViewport({ ratio: 1 });
+  });
+}

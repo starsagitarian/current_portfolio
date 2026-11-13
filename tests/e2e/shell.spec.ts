@@ -6,10 +6,21 @@ import { expect, test, type Page } from "@playwright/test";
  */
 
 const SECTIONS = [
-  { name: "Résumé", path: "/resume" },
-  { name: "Projects", path: "/projects" },
-  { name: "Contact", path: "/contact" },
+  { name: "Résumé", path: "/resume", heading: "Résumé" },
+  { name: "Projects", path: "/projects", heading: "Projects" },
+  { name: "Contact", path: "/contact", heading: "Let’s talk" },
 ];
+
+// The development server's floating button can sit over the tab bar; it is not part of the site.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    const style = document.createElement("style");
+    style.textContent = "nextjs-portal { display: none !important; }";
+    document.addEventListener("DOMContentLoaded", () => {
+      document.head.append(style);
+    });
+  });
+});
 
 /** The accent gold, #e7a83b, as the browser reports it. */
 const GOLD = "rgb(231, 168, 59)";
@@ -53,7 +64,7 @@ test("every section is reachable by mouse from the desktop navigation", async ({
       .getByRole("link", { name: section.name })
       .click();
     await expect(page).toHaveURL(section.path);
-    await expect(page.getByRole("heading", { level: 1, name: section.name })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: section.heading })).toBeVisible();
     await expectCurrent(page, "Sections", section.name);
   }
   await page
@@ -78,7 +89,7 @@ test("every section is reachable from the tab bar on phones and tablets", async 
     if (touch) await tab.tap();
     else await tab.click();
     await expect(page).toHaveURL(section.path);
-    await expect(page.getByRole("heading", { level: 1, name: section.name })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: section.heading })).toBeVisible();
     await expectCurrent(page, "Sections", section.name);
   }
 });
