@@ -11,7 +11,10 @@ import { getProject, getProjects } from "@/lib/projects";
 import "@/components/page/page.css";
 import "@/components/projects/projects.css";
 
-/** A page for every project, built ahead; one added later is built on its first visit. */
+/**
+ * A page for every project, built ahead; one added later is built on its first visit. An unknown
+ * slug shows the not-found page, marked noindex.
+ */
 export async function generateStaticParams() {
   const { projects } = await getProjects();
   return projects.map(({ slug }) => ({ slug }));

@@ -105,7 +105,8 @@ test("filters without asking the server again", async ({ page }, info) => {
 
   const requests: string[] = [];
   page.on("request", (request) => {
-    if (new URL(request.url()).pathname.startsWith("/projects")) requests.push(request.url());
+    // the list's own address (prefetches of the project pages it links to are expected)
+    if (new URL(request.url()).pathname === "/projects") requests.push(request.url());
   });
   await choose(page, "Web", false);
   await expect.poll(() => tileTitles(page)).toEqual(tagged("web"));
@@ -201,11 +202,20 @@ test("moves between projects, and back to the list", async ({ page }, info) => {
   ).toHaveAttribute("aria-current", "page");
 });
 
-test("answers 404 with a way back for a project that does not exist", async ({ page }) => {
+// A slug nobody has asked for yet streams its page shell before the lookup says "no such
+// project", so that first answer keeps a 200 (Next.js documents this) and is marked noindex;
+// once known, it is a 404. Either way the visitor sees the not-found page.
+test("shows a way back for a project that does not exist, kept out of search", async ({ page }) => {
   const res = await page.goto("/projects/no-such-project");
-  expect(res?.status()).toBe(404);
+  expect([200, 404]).toContain(res?.status());
   await expect(page.getByRole("heading", { level: 1, name: "Project not found" })).toBeVisible();
   await expect(page.getByRole("main").getByRole("link", { name: "All projects" })).toBeVisible();
+  // (a cached 404 can carry the tag twice, once from the server and once from the client)
+  const robots = await page
+    .locator('meta[name="robots"]')
+    .evaluateAll((tags) => tags.map((tag) => tag.getAttribute("content")));
+  expect(robots.length).toBeGreaterThan(0);
+  for (const content of robots) expect(content).toMatch(/noindex/);
 });
 
 test("the drawing travels from the tile to the project's page", async ({ page }, info) => {
