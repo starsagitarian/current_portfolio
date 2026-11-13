@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
+import { TabMotionPause } from "@/motion/TabMotionPause";
 import { SkyFollower } from "@/sky/SkyFollower";
 import { SKY_INIT_SCRIPT } from "@/sky/sky";
 import "./globals.css";
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <SkyFollower />
+        <TabMotionPause />
         {children}
       </body>
     </html>

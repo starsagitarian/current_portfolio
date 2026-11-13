@@ -150,32 +150,135 @@ function Stars() {
   );
 }
 
-const WISPS = [
-  { x: 4, y: 8, w: 15, h: 5 },
-  { x: 22, y: 20, w: 11, h: 3.6 },
-  { x: 33, y: 5, w: 9, h: 3 },
-  { x: 41, y: 15, w: 13, h: 4.4 },
+interface Wisp {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/*
+ * Three layers of cloud wisps, each drifting at its own speed: far ones small, high and slow,
+ * near ones larger, lower and quicker, for a gentle parallax. Positions are percentages of a
+ * strip twice the painting's width, which slides by half its width and loops seamlessly.
+ */
+const CLOUD_LAYERS: { name: string; seconds: number; wisps: Wisp[] }[] = [
+  {
+    name: "far",
+    seconds: 180,
+    wisps: [
+      { x: 6, y: 4, w: 9, h: 2.6 },
+      { x: 25, y: 10, w: 7, h: 2 },
+      { x: 40, y: 3, w: 8, h: 2.4 },
+    ],
+  },
+  {
+    name: "mid",
+    seconds: 120,
+    wisps: [
+      { x: 4, y: 8, w: 15, h: 5 },
+      { x: 22, y: 20, w: 11, h: 3.6 },
+      { x: 33, y: 5, w: 9, h: 3 },
+      { x: 41, y: 15, w: 13, h: 4.4 },
+    ],
+  },
+  {
+    name: "near",
+    seconds: 70,
+    wisps: [
+      { x: 12, y: 15, w: 18, h: 5.5 },
+      { x: 36, y: 22, w: 14, h: 4.4 },
+    ],
+  },
 ];
 
 function Clouds() {
-  // two copies of the same wisps side by side; sliding by one copy loops seamlessly
   return (
     <div className="fx fx-clouds">
-      <div className="fx-clouds-strip">
-        {[0, 50].map((offset) =>
-          WISPS.map((w, i) => (
-            <span
-              key={`${offset}-${i}`}
-              style={{
-                left: `${offset + w.x}%`,
-                top: `${w.y}%`,
-                width: `${w.w}%`,
-                height: `${w.h}%`,
-              }}
-            />
-          )),
-        )}
-      </div>
+      {CLOUD_LAYERS.map((layer) => (
+        <div
+          key={layer.name}
+          className={`fx-clouds-strip fx-clouds-${layer.name}`}
+          style={{ animationDuration: `${layer.seconds}s` }}
+        >
+          {/* two copies of the same wisps side by side; sliding by one copy loops seamlessly */}
+          {[0, 50].map((offset) =>
+            layer.wisps.map((w, i) => (
+              <span
+                key={`${offset}-${i}`}
+                style={{
+                  left: `${offset + w.x}%`,
+                  top: `${w.y}%`,
+                  width: `${w.w}%`,
+                  height: `${w.h}%`,
+                }}
+              />
+            )),
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** A slow band of light sliding across the river's ripples. */
+function Shimmer({ variant }: { variant: "landscape" | "portrait" }) {
+  const { river } = LANDMARKS[variant];
+  return (
+    <div
+      className={`fx fx-shimmer fx-${variant}`}
+      style={{
+        left: `${river.left}%`,
+        top: `${river.top}%`,
+        width: `${river.right - river.left}%`,
+        height: `${river.bottom - river.top}%`,
+      }}
+    >
+      <span />
+    </div>
+  );
+}
+
+/** Tower Bridge after dark: floodlit towers that breathe, and strings of lights that ripple. */
+function Bridge() {
+  const { towers, bridge } = LANDMARKS.landscape;
+  const { walkway, deck, towerBody } = bridge;
+  const lights: { x: number; y: number; delay: number }[] = [];
+  const string = (y: number, from: number, to: number) => {
+    const count = Math.round((to - from) / 1.3) + 1;
+    for (let i = 0; i < count; i++) {
+      lights.push({
+        x: r2(from + ((to - from) * i) / (count - 1)),
+        y,
+        // each light a little behind the last, so a gentle wave runs along the string
+        delay: r2(-i * 0.22),
+      });
+    }
+  };
+  string(walkway.y, walkway.from, walkway.to);
+  for (const [from, to] of deck.spans) string(deck.y, from, to);
+
+  return (
+    <div className="fx fx-bridge fx-landscape">
+      {towers.map((x) => (
+        <span
+          key={x}
+          className="bridge-tower"
+          style={{
+            left: `${x}%`,
+            top: `${towerBody.top}%`,
+            width: `${towerBody.width}%`,
+            height: `${towerBody.bottom - towerBody.top}%`,
+          }}
+        />
+      ))}
+      {lights.map((light, i) => (
+        <span
+          key={i}
+          className="bridge-light"
+          style={{ left: `${light.x}%`, top: `${light.y}%`, animationDelay: `${light.delay}s` }}
+        />
+      ))}
     </div>
   );
 }
@@ -193,8 +296,9 @@ function Lamps() {
 }
 
 /**
- * The painted backdrop with its ambient motion: drifting cloud wisps, glints on the river,
- * flickering lamp glow and stars after dark. Transforms and opacity only, so it stays smooth.
+ * The painted backdrop with its ambient motion: three layers of drifting cloud, a band of light
+ * and glints on the river, and after dark the bridge lights, lamp glow and stars. Every loop
+ * animates transform or opacity only, so it runs on the compositor and stays smooth.
  */
 export function ScenePlates({ className = "" }: { className?: string }) {
   const [all, setAll] = useState(false);
@@ -216,8 +320,11 @@ export function ScenePlates({ className = "" }: { className?: string }) {
       ))}
       <Clouds />
       <Stars />
+      <Shimmer variant="landscape" />
+      <Shimmer variant="portrait" />
       <River variant="landscape" />
       <River variant="portrait" />
+      <Bridge />
       <Lamps />
     </div>
   );

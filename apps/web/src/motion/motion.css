@@ -1,0 +1,23 @@
+/*
+ * Ambient motion rules for the whole site. Every loop animates transform or opacity only (an
+ * end-to-end test checks), so it runs on the compositor and never forces layout.
+ */
+
+/* Hidden tabs and the prototype's "Pause motion" freeze every loop where it is. */
+html[data-tab-hidden] *,
+html[data-tab-hidden] *::before,
+html[data-tab-hidden] *::after,
+html[data-motion-paused] *,
+html[data-motion-paused] *::before,
+html[data-motion-paused] *::after {
+  animation-play-state: paused !important;
+}
+
+/* Visitors who ask for less motion get none: no loops at all. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+  }
+}

@@ -48,6 +48,22 @@ export const LANDMARKS = {
     ],
     river: { top: 70.2, bottom: 83.9, left: 7.5, right: 92.5 },
     towers: [37.4, 62.6],
+    /** Tower Bridge's lights, the same on the dusk and night paintings. */
+    bridge: {
+      // along the walkway's top edge, against the sky
+      walkway: { y: 42.3, from: 39.8, to: 60.2 },
+      // along the blue girders under the deck
+      deck: {
+        y: 64.9,
+        spans: [
+          [13.2, 32.2],
+          [40.8, 59.2],
+          [67.8, 88.4],
+        ],
+      },
+      /** The lit stonework of each tower: centre x, top and bottom. */
+      towerBody: { top: 40.5, bottom: 62.5, width: 6.4 },
+    },
   },
   portrait: {
     lamps: [],

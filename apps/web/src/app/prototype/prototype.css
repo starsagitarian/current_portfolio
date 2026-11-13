@@ -110,9 +110,3 @@
   opacity: 0.45;
   cursor: default;
 }
-
-/* "Pause motion" in the panel */
-[data-motion-paused] .plates *,
-[data-motion-paused] .character-body {
-  animation-play-state: paused !important;
-}

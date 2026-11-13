@@ -200,6 +200,11 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
   from 320 to 1920 px, with each card laid over both black and white.
 - **The scene.** Three aligned paintings fade into one another with the light, and each screen
   downloads only the one it shows (at most about 260 KB on a phone, tablet or desktop).
+- **Ambient motion.** Three layers of cloud drift at different speeds, light slides across the
+  river, and after dark the bridge's towers glow and its strings of lights ripple, with the lamps
+  and stars. Every loop animates `transform` or `opacity` only, so it runs on the compositor;
+  nothing loops for visitors who prefer reduced motion, and everything pauses while the tab is
+  hidden ([`apps/web/src/motion`](apps/web/src/motion)). Browser tests check all three.
 
 ## Scripts
 

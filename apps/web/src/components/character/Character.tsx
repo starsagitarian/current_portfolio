@@ -35,6 +35,16 @@ function almond(cx: number, cy: number) {
 }
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Waits, then keeps waiting while the tab is hidden, so the idle eyes pause with the page. */
+async function idle(ms: number) {
+  await wait(ms);
+  while (document.hidden) {
+    await new Promise((resolve) => {
+      document.addEventListener("visibilitychange", resolve, { once: true });
+    });
+  }
+}
 const between = (min: number, max: number) => min + Math.random() * (max - min);
 
 /** Idle behaviour: blinks every 3-6 s, glances now and then, and the odd eye roll. */
@@ -52,7 +62,7 @@ function useIdleEyes(): Gaze {
 
     async function blinking() {
       while (alive) {
-        await wait(between(3000, 6000));
+        await idle(between(3000, 6000));
         set({ lid: 1 });
         await wait(110);
         set({ lid: 0 });
@@ -61,7 +71,7 @@ function useIdleEyes(): Gaze {
     async function looking() {
       let count = 0;
       while (alive) {
-        await wait(between(3500, 7000));
+        await idle(between(3500, 7000));
         count++;
         if (count % 4 === 0) {
           // eye roll: up and round, with heavy lids

@@ -61,14 +61,21 @@
   }
 }
 
-/* drifting cloud wisps: soft, low and always in the sky band */
+/* drifting cloud wisps in three layers: soft, low and always in the sky band */
 .fx-clouds {
   opacity: calc(0.42 - var(--t2) * 0.2);
 }
 .fx-clouds-strip {
   width: 200%;
-  animation: plates-drift 210s linear infinite;
+  /* the duration is set per layer */
+  animation: plates-drift 120s linear infinite;
   will-change: transform;
+}
+.fx-clouds-far {
+  opacity: 0.55;
+}
+.fx-clouds-near {
+  opacity: 0.85;
 }
 .fx-clouds span {
   border-radius: 50%;
@@ -108,6 +115,58 @@
   background: linear-gradient(90deg, transparent, var(--shimmer), transparent);
   opacity: 0;
   animation: plates-glint 6s ease-in-out infinite;
+}
+
+/* a band of light sliding across the ripples, brighter after dark */
+.fx-shimmer {
+  inset: auto;
+  overflow: hidden;
+  opacity: calc(0.3 + var(--t2) * 0.3);
+  /* ripple lines, fading out at the banks */
+  mask-image:
+    linear-gradient(transparent, #000 20%, #000 80%, transparent),
+    repeating-linear-gradient(180deg, #000 0 2px, transparent 2px 7px);
+  mask-composite: intersect;
+}
+.fx-shimmer span {
+  inset: 0 auto 0 0;
+  width: 200%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 6%,
+    color-mix(in oklch, var(--shimmer) 55%, transparent) 9%,
+    transparent 13%
+  );
+  animation: plates-drift 40s linear infinite;
+  will-change: transform;
+}
+
+/* Tower Bridge's floodlights and strings of lights: off by day, on through the evening */
+.fx-bridge {
+  opacity: var(--lights-on);
+}
+.bridge-tower {
+  translate: -50% 0;
+  border-radius: 40%;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 214 140 / 0.32),
+    rgb(255 200 120 / 0.1) 60%,
+    transparent
+  );
+  animation: plates-breathe 7s ease-in-out infinite;
+}
+.bridge-tower:nth-child(2) {
+  animation-delay: -3.1s;
+}
+.bridge-light {
+  width: 0.32%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: #ffd98a;
+  box-shadow: 0 0 6px 2px rgb(255 190 90 / 0.8);
+  animation: plates-ripple 4.4s ease-in-out infinite;
 }
 
 /* lamp glow: off by day, warming at dusk, full at night */
@@ -160,6 +219,24 @@
     transform: translateX(35%) scaleX(1);
   }
 }
+@keyframes plates-breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes plates-ripple {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 @keyframes plates-flicker {
   0%,
   100% {
@@ -170,6 +247,17 @@
   }
   55% {
     opacity: 0.94;
+  }
+}
+
+/*
+ * Phones by day show no lights at all (the light only reaches dusk from 560 px), so their lights
+ * and stars are left out rather than animated invisibly. The prototype's slider (data-all) can
+ * still bring them in at any width.
+ */
+@media (max-width: 560px) {
+  .plates:not([data-all]) :is(.fx-bridge, .fx-lamps, .fx-stars) {
+    display: none;
   }
 }
 
