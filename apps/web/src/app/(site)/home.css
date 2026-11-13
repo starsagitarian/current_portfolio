@@ -1,0 +1,152 @@
+/*
+ * Home's three layouts. The character is fixed to the scene and glides with the light (see
+ * character.css): centre on phones, left on tablets, right on desktops.
+ */
+.home {
+  position: relative;
+  display: flex;
+  flex: 1;
+}
+
+.home-stage {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+/* on phones and tablets he stands just above the tab bar */
+.home-stage .character {
+  bottom: 96px;
+  height: clamp(300px, calc(100dvh - 210px), 780px);
+}
+
+/* ---- phones and tablets: the introduction is for screen readers; the picture speaks */
+.home-intro {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.home-actions,
+.home-profiles {
+  display: none;
+}
+
+.home-cards {
+  display: none;
+}
+
+/* ---- tablets: a card for each section, on the right */
+@media (min-width: 768px) {
+  .home-stage .character {
+    bottom: 3vh;
+    height: clamp(320px, calc(100dvh - 150px), 820px);
+  }
+  .home-cards {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: min(360px, 44vw);
+    margin: 2vh 2vw auto auto;
+  }
+  .home-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 18px;
+    padding: 22px 22px 22px 26px;
+    border-radius: 22px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--ink);
+    transition: translate 0.2s ease;
+  }
+  .home-card:hover {
+    translate: -4px 0;
+  }
+}
+
+/* ---- desktops: the introduction on the left, the character on the right */
+@media (min-width: 1100px) {
+  .home-stage .character {
+    bottom: 2.5vh;
+    height: clamp(320px, 72vh, 820px);
+  }
+  .home-cards {
+    display: none;
+  }
+  .home-intro {
+    position: relative;
+    z-index: 1;
+    width: min(620px, 46vw);
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    align-self: center;
+    margin-left: 2vw;
+    padding: 40px 44px;
+    border-radius: 28px;
+  }
+  .home-title {
+    font-size: clamp(3rem, 5.2vw, 4.8rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+  .home-role {
+    margin-top: 10px;
+    font-size: clamp(1.4rem, 2vw, 1.9rem);
+    font-weight: 600;
+  }
+  .home-tagline {
+    margin-top: 18px;
+    max-width: 34ch;
+    font-size: 1.15rem;
+    color: var(--ink-muted);
+  }
+  .home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+  }
+  .home-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: 18px;
+    border: 1.5px solid var(--line);
+    font-weight: 600;
+    color: var(--ink);
+    transition: translate 0.2s ease;
+  }
+  .home-action:hover {
+    translate: 0 -2px;
+  }
+  .home-action-primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: transparent;
+  }
+  .home-profiles {
+    display: flex;
+    gap: 20px;
+    margin-top: 22px;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+  .home-profiles a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-muted);
+  }
+  .home-profiles a:hover {
+    color: var(--ink);
+  }
+}

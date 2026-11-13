@@ -105,7 +105,8 @@ test("without JavaScript, shows the pure light for the width", async ({ browser 
     }));
     expect(state.inline, `${width} px: no script ran`).toBe("");
     expect(state.sky, `${width} px`).toBe(expected);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator(".plates")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toBeAttached();
     await context.close();
   }
 });
@@ -173,6 +174,12 @@ function measureContrast(): string[] {
       .join("")
       .trim();
     if (ownText === "" || element.getClientRects().length === 0) continue;
+    // text kept for screen readers only (clipped to nothing) is not seen, so not measured
+    if (element.closest("[style*='clip'], .home-intro") !== null) {
+      const box = element.getBoundingClientRect();
+      const clipped = getComputedStyle(element.closest(".home-intro") ?? element).clipPath;
+      if (clipped.startsWith("inset(50%") || box.width * box.height < 4) continue;
+    }
 
     let surface: HTMLElement | null = element;
     let background = rgba(getComputedStyle(element).backgroundColor);

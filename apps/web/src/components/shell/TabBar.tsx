@@ -8,7 +8,11 @@ import { isCurrent, SECTIONS } from "./nav";
 export function TabBar() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Sections" className="tab-bar surface">
+    // Home on a tablet has a card for each section, so it needs no tab bar.
+    <nav
+      aria-label="Sections"
+      className={`tab-bar surface${pathname === "/" ? " tab-bar-home" : ""}`}
+    >
       {SECTIONS.map((item) => (
         <Link
           key={item.href}

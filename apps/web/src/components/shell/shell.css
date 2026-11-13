@@ -153,6 +153,9 @@
 }
 
 @media (min-width: 768px) {
+  .tab-bar-home {
+    display: none;
+  }
   .site-header {
     grid-template-columns: 44px 1fr 44px;
   }
@@ -283,17 +286,28 @@
   box-shadow: var(--shadow);
 }
 
-/* ---- page changes: the content slides and fades in; the sky and the scene stay put */
+/*
+ * ---- page changes: the content fades in and its cards rise into place; the sky, the scene and
+ * the character stay put. The page itself only fades (no transform), so anything fixed inside it,
+ * like the character, keeps its place on the screen. "backwards" holds the start state before
+ * the animation runs and lets go afterwards, so nothing lingers.
+ */
 .page {
   display: flex;
   flex: 1;
   flex-direction: column;
-  /* "backwards": hold the start state before it runs, then let go, so nothing lingers after */
-  animation: page-enter 0.4s ease-out backwards;
+  animation: page-fade 0.4s ease-out backwards;
 }
-@keyframes page-enter {
+.page .surface {
+  animation: page-rise 0.4s ease-out backwards;
+}
+@keyframes page-fade {
   from {
     opacity: 0;
+  }
+}
+@keyframes page-rise {
+  from {
     transform: translateY(14px);
   }
 }

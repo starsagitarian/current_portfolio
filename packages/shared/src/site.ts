@@ -3,6 +3,7 @@ export const site = {
   name: "Baiju Joseph",
   brand: "starsagitarian",
   title: "Software & Cloud Engineer",
+  tagline: "Building thoughtful software with TypeScript, Python and AWS.",
   url: "https://starsagitarian.vercel.app",
   links: {
     github: "https://github.com/starsagitarian",

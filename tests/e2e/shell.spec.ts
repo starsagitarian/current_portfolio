@@ -48,7 +48,8 @@ test("every section is reachable from the tab bar on phones and tablets", async 
   page,
 }, info) => {
   test.skip(info.project.name === "desktop", "phones and tablets");
-  await page.goto("/");
+  // (home on a tablet shows a card per section instead of the tab bar; see home.spec.ts)
+  await page.goto("/contact");
   const touch = info.project.use.hasTouch === true;
 
   for (const section of SECTIONS) {

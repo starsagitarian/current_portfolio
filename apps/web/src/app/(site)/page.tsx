@@ -1,31 +1,66 @@
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { site } from "@starsagitarian/shared";
+import { Character } from "@/components/character/Character";
 import { GitHubIcon, LinkedInIcon } from "@/components/shell/BrandIcons";
+import { SECTIONS } from "@/components/shell/nav";
+import "./home.css";
 
-const link =
-  "inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2 font-semibold text-accent-ink shadow-sm transition hover:-translate-y-0.5";
-
-// Placeholder until the home page proper (SP-14).
+/*
+ * Home, after the mockups. Phones: the character, centre stage, in daylight. Tablets: the
+ * character on the left at dusk, with a card for each section on the right. Desktops: the
+ * introduction and the sections on the left at blue hour, the character on the right.
+ */
 export default function Home() {
+  const [first, ...others] = SECTIONS;
   return (
-    <section className="m-auto flex w-full max-w-lg flex-col items-center gap-5 rounded-3xl px-8 py-10 text-center surface">
-      <p className="text-xs font-semibold tracking-[0.3em] text-ink-muted uppercase">
-        {site.brand}
-      </p>
-      <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">{site.name}</h1>
-      <p className="text-lg sm:text-2xl">{site.title}</p>
-      <p className="max-w-md text-base text-ink-muted">
-        A new portfolio is on its way: an illustrated London, from daylight to blue hour.
-      </p>
-      <nav aria-label="Profiles" className="flex gap-3">
-        <a className={link} href={site.links.github} rel="me noopener">
-          <GitHubIcon size={18} />
-          GitHub
-        </a>
-        <a className={link} href={site.links.linkedin} rel="me noopener">
-          <LinkedInIcon size={18} />
-          LinkedIn
-        </a>
+    <div className="home">
+      {/* the character stands on the promenade, fixed to the scene rather than the page */}
+      <div className="home-stage" aria-hidden="true">
+        <Character pose="standing" />
+      </div>
+
+      <section className="home-intro surface" aria-labelledby="home-title">
+        <h1 id="home-title" className="home-title">
+          Hi, I&rsquo;m {site.name.split(" ")[0]}.
+        </h1>
+        <p className="home-role">{site.title}.</p>
+        <p className="home-tagline">{site.tagline}</p>
+        <nav aria-label="Explore" className="home-actions">
+          {first && (
+            <Link href={first.href} className="home-action home-action-primary">
+              <first.icon aria-hidden="true" size={20} />
+              {first.label}
+            </Link>
+          )}
+          {others.map((item) => (
+            <Link key={item.href} href={item.href} className="home-action">
+              <item.icon aria-hidden="true" size={20} />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <nav aria-label="Profiles" className="home-profiles">
+          <a href={site.links.github} rel="me noopener">
+            <GitHubIcon size={16} />
+            GitHub
+          </a>
+          <a href={site.links.linkedin} rel="me noopener">
+            <LinkedInIcon size={16} />
+            LinkedIn
+          </a>
+        </nav>
+      </section>
+
+      <nav aria-label="Explore" className="home-cards">
+        {SECTIONS.map((item) => (
+          <Link key={item.href} href={item.href} className="home-card surface">
+            <item.icon aria-hidden="true" size={30} strokeWidth={1.75} />
+            <span>{item.label}</span>
+            <ChevronRight aria-hidden="true" size={22} className="home-card-chevron" />
+          </Link>
+        ))}
       </nav>
-    </section>
+    </div>
   );
 }
