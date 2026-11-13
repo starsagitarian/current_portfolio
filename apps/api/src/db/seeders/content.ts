@@ -20,6 +20,9 @@ export const tags = [
 
 type TagSlug = (typeof tags)[number]["slug"];
 
+/** When the seeded projects were published. Fixed, so re-seeding gives identical data. */
+export const projectsPublishedAt = "2026-11-11T00:00:00.000Z";
+
 export interface ProjectSeed {
   slug: string;
   title: string;

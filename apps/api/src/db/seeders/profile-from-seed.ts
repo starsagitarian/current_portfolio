@@ -5,7 +5,7 @@ const toMonth = (date: string) => date.slice(0, 7);
 
 /**
  * The seed content in the shape GET /v1/profile publishes. The web app keeps a copy as its
- * fallback for when the API cannot be reached (see scripts/profile-snapshot.ts), and tests check
+ * fallback for when the API cannot be reached (see scripts/content-snapshot.ts), and tests check
  * that the API serves exactly this from a freshly seeded database.
  */
 export function profileFromSeed(): Profile {

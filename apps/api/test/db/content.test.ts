@@ -8,12 +8,14 @@ import {
   ProfileSchema,
   ProjectDetailSchema,
   ProjectListSchema,
+  ProjectSummarySchema,
 } from "@starsagitarian/shared";
 import { createApp } from "../../src/app";
 import { loadConfig } from "../../src/config";
 import { connectDatabase, initModels, Profile, Project } from "../../src/db";
 import * as content from "../../src/db/seeders/content";
 import { profileFromSeed } from "../../src/db/seeders/profile-from-seed";
+import { projectsFromSeed } from "../../src/db/seeders/projects-from-seed";
 import { CONTENT_CACHE_CONTROL } from "../../src/http/cache";
 import { pdfLines } from "../helpers/pdf";
 import { PRIVATE_DETAILS } from "../helpers/profile";
@@ -156,6 +158,20 @@ describe("GET /v1/projects/:slug", () => {
       technologies: seed?.technologies,
     });
     expect(res.headers["cache-control"]).toBe(CONTENT_CACHE_CONTROL);
+  });
+
+  it("serves every project exactly as the web app's fallback copy has it", async () => {
+    const seeded = projectsFromSeed();
+    const served = await Promise.all(
+      seeded.map(async ({ slug }) => {
+        const res = await request(app).get(`/v1/projects/${slug}`).expect(200);
+        return res.body as unknown;
+      }),
+    );
+    expect(served).toEqual(seeded);
+
+    const list = ProjectListSchema.parse((await request(app).get("/v1/projects")).body);
+    expect(list.items).toEqual(seeded.map((project) => ProjectSummarySchema.parse(project)));
   });
 
   it.each(["no-such-project", "Not_A_Slug", "a".repeat(200)])(

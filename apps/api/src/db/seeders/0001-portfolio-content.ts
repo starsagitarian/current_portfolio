@@ -14,9 +14,6 @@ import {
 import type { StepContext } from "../migrator";
 import * as content from "./content";
 
-/** Fixed so re-seeding gives identical data. */
-const PUBLISHED_AT = new Date("2026-11-11T00:00:00Z");
-
 export async function up({ sequelize, transaction }: StepContext): Promise<void> {
   initModels(sequelize);
   const opts = { transaction };
@@ -46,7 +43,7 @@ export async function up({ sequelize, transaction }: StepContext): Promise<void>
         coverImage: null,
         featured: seed.featured,
         sortOrder: index,
-        publishedAt: PUBLISHED_AT,
+        publishedAt: new Date(content.projectsPublishedAt),
       },
       opts,
     );

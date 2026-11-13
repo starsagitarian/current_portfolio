@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { createApp } from "../src/app";
 import { loadConfig } from "../src/config";
 import { profileFromSeed } from "../src/db/seeders/profile-from-seed";
+import { projectsFromSeed } from "../src/db/seeders/projects-from-seed";
 import { buildOpenApiDocument } from "../src/openapi/document";
 import { DOCS_CACHE_CONTROL } from "../src/routes/docs";
 
@@ -75,14 +76,16 @@ describe("GET /docs", () => {
   });
 });
 
-describe("the web app's fallback profile", () => {
-  it("matches the seed content (run `npm run snapshot -w @starsagitarian/api`)", async () => {
-    const snapshot: unknown = JSON.parse(
-      await readFile(
-        path.resolve(import.meta.dirname, "../../web/src/content/profile.snapshot.json"),
-        "utf8",
-      ),
+describe("the web app's fallback content", () => {
+  const readSnapshot = async (file: string): Promise<unknown> =>
+    JSON.parse(
+      await readFile(path.resolve(import.meta.dirname, "../../web/src/content", file), "utf8"),
     );
-    expect(snapshot).toEqual(profileFromSeed());
+
+  it.each([
+    ["profile.snapshot.json", profileFromSeed],
+    ["projects.snapshot.json", projectsFromSeed],
+  ])("%s matches the seed (run `npm run snapshot -w @starsagitarian/api`)", async (file, build) => {
+    expect(await readSnapshot(file)).toEqual(build());
   });
 });

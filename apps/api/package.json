@@ -20,7 +20,7 @@
     "db:reset": "npm run db -- reset",
     "db:migrate:dist": "node dist/db-cli.js migrate",
     "openapi": "tsx scripts/openapi.ts",
-    "snapshot": "tsx scripts/profile-snapshot.ts"
+    "snapshot": "tsx scripts/content-snapshot.ts"
   },
   "dependencies": {
     "@starsagitarian/shared": "*",

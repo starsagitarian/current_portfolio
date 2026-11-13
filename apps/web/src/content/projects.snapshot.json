@@ -1,0 +1,181 @@
+[
+  {
+    "slug": "portfolio-platform",
+    "title": "Portfolio platform",
+    "organisation": null,
+    "summary": "This site: an illustrated London whose light follows your screen width, backed by a TypeScript API and PostgreSQL.",
+    "featured": true,
+    "tags": [
+      {
+        "slug": "cloud",
+        "label": "Cloud"
+      },
+      {
+        "slug": "web",
+        "label": "Web"
+      }
+    ],
+    "technologies": [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Express",
+      "PostgreSQL",
+      "Sequelize",
+      "Docker"
+    ],
+    "repoUrl": "https://github.com/starsagitarian/current_portfolio",
+    "liveUrl": null,
+    "coverImage": null,
+    "publishedAt": "2026-11-11T00:00:00.000Z",
+    "body": "A personal portfolio built as a small production system rather than a static page.\n\nThe front end is Next.js with a London riverside scene that moves from daylight to dusk to blue hour as the window widens. Behind it, an Express API in TypeScript serves content from PostgreSQL through Sequelize, with versioned migrations, full-text search and OpenAPI documentation.\n\nEverything runs in containers locally and deploys through GitHub Actions at zero hosting cost."
+  },
+  {
+    "slug": "book-content-pipelines",
+    "title": "Book content pipelines",
+    "organisation": "DK Publishing",
+    "summary": "Serverless pipelines turning XML and ONIX book data into JSON for the CMS: about six hours of manual work saved a week, import errors cut from about 8% to under 3%.",
+    "featured": true,
+    "tags": [
+      {
+        "slug": "cloud",
+        "label": "Cloud"
+      },
+      {
+        "slug": "data",
+        "label": "Data"
+      }
+    ],
+    "technologies": ["AWS Lambda", "Amazon S3", "Make.com", "XML", "ONIX"],
+    "repoUrl": null,
+    "liveUrl": null,
+    "coverImage": null,
+    "publishedAt": "2026-11-11T00:00:00.000Z",
+    "body": "Editorial staff spent hours each week preparing book content for import by hand, and errors were common.\n\nI worked with them to understand the process, then built serverless XML-to-JSON and ONIX processing pipelines on AWS Lambda and S3, integrated with the CMS APIs and Make.com.\n\nThe pipelines saved about six hours of manual work a week and cut import errors from about 8% to below 3%."
+  },
+  {
+    "slug": "dk-learning-microsite",
+    "title": "DK Learning microsite",
+    "organisation": "DK Publishing",
+    "summary": "Led development of the DK Learning and DK Super Readers microsite on React and Next.js, with a headless CMS, search and e-commerce.",
+    "featured": false,
+    "tags": [
+      {
+        "slug": "web",
+        "label": "Web"
+      }
+    ],
+    "technologies": ["React", "Next.js", "Tailwind CSS", "Hygraph", "Algolia"],
+    "repoUrl": null,
+    "liveUrl": null,
+    "coverImage": null,
+    "publishedAt": "2026-11-11T00:00:00.000Z",
+    "body": "I led development of the DK Learning / DK Super Readers microsite, a React and Next.js platform styled with Tailwind CSS.\n\nIt integrates Hygraph as a headless CMS, Algolia for search and e-commerce APIs, and was delivered with product, editorial and technical teams."
+  },
+  {
+    "slug": "phonic-books-automation",
+    "title": "Phonic Books sales automation",
+    "organisation": "DK Publishing",
+    "summary": "Backend services automating sales and inventory for Phonic Books with Node.js, AWS Lambda, DynamoDB and Shopify's GraphQL APIs.",
+    "featured": false,
+    "tags": [
+      {
+        "slug": "cloud",
+        "label": "Cloud"
+      }
+    ],
+    "technologies": ["Node.js", "AWS Lambda", "DynamoDB", "Shopify GraphQL"],
+    "repoUrl": null,
+    "liveUrl": null,
+    "coverImage": null,
+    "publishedAt": "2026-11-11T00:00:00.000Z",
+    "body": "I designed backend services for Phonic Books that automate sales and inventory.\n\nThey run on Node.js and AWS Lambda, keep state in DynamoDB and integrate with Shopify through its GraphQL APIs."
+  },
+  {
+    "slug": "lightning-observation",
+    "title": "Lightning observation",
+    "organisation": "Met Office",
+    "summary": "Python services processing data from an 11-sensor European lightning network.",
+    "featured": true,
+    "tags": [
+      {
+        "slug": "cloud",
+        "label": "Cloud"
+      },
+      {
+        "slug": "data",
+        "label": "Data"
+      }
+    ],
+    "technologies": [
+      "Python",
+      "AWS Lambda",
+      "Amazon SQS",
+      "Amazon S3",
+      "DynamoDB",
+      "AWS CDK",
+      "Pytest",
+      "Behave",
+      "mypy"
+    ],
+    "repoUrl": null,
+    "liveUrl": null,
+    "coverImage": null,
+    "publishedAt": "2026-11-11T00:00:00.000Z",
+    "body": "Python services that ingest, transform and validate lightning observations from a European detection network for the Met Office's lightning data products.\n\nThe services run as event-driven AWS workflows, with infrastructure as code and automated delivery. Quality comes from Pytest unit tests, Behave integration tests and mypy static typing.\n\nI also supported the live services: investigating defects, making maintenance changes and testing fixes before release."
+  },
+  {
+    "slug": "saas-data-services",
+    "title": "SaaS data services",
+    "organisation": "Innowiz IT Consultancy",
+    "summary": "React front ends and Python microservices with REST and GraphQL APIs for high-volume data processing, plus serverless chatbot work on AWS Bedrock.",
+    "featured": false,
+    "tags": [
+      {
+        "slug": "cloud",
+        "label": "Cloud"
+      },
+      {
+        "slug": "data",
+        "label": "Data"
+      },
+      {
+        "slug": "web",
+        "label": "Web"
+      }
+    ],
+    "technologies": [
+      "React",
+      "FastAPI",
+      "Flask",
+      "PostgreSQL",
+      "DynamoDB",
+      "GraphQL",
+      "AWS Bedrock"
+    ],
+    "repoUrl": null,
+    "liveUrl": null,
+    "coverImage": null,
+    "publishedAt": "2026-11-11T00:00:00.000Z",
+    "body": "I designed and built SaaS applications with React front ends and Python microservices (FastAPI, Flask), backed by PostgreSQL and DynamoDB.\n\nThe REST and GraphQL APIs handle high-volume data processing, with Pandas, NumPy and mypy in the ETL workflows. I added logging and monitoring with CloudWatch and CloudTrail, and contributed to chatbot applications on AWS Bedrock."
+  },
+  {
+    "slug": "remedic",
+    "title": "Remedic consultation prototype",
+    "organisation": "Sahusoft UK",
+    "summary": "A multilingual doctor–patient consultation proof of concept with authentication, real-time chat and onboarding.",
+    "featured": false,
+    "tags": [
+      {
+        "slug": "web",
+        "label": "Web"
+      }
+    ],
+    "technologies": ["React", "TypeScript", "Redux", "Socket.IO", "GraphQL", "JWT", "PostgreSQL"],
+    "repoUrl": null,
+    "liveUrl": null,
+    "coverImage": null,
+    "publishedAt": "2026-11-11T00:00:00.000Z",
+    "body": "Remedic is a multilingual doctor–patient consultation proof of concept, built and refined with stakeholders.\n\nI implemented authentication, real-time chat and onboarding with JWT, Socket.IO, GraphQL, React, TypeScript and Redux, working across the front end, back end and PostgreSQL."
+  }
+]
