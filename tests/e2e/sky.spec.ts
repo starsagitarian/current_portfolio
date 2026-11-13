@@ -164,7 +164,9 @@ function measureContrast(): string[] {
   };
 
   const problems: string[] = [];
-  for (const element of document.querySelectorAll<HTMLElement>("main *")) {
+  for (const element of document.querySelectorAll<HTMLElement>(
+    "body *:not(script, style, noscript)",
+  )) {
     const ownText = [...element.childNodes]
       .filter((node) => node.nodeType === Node.TEXT_NODE)
       .map((node) => node.textContent ?? "")

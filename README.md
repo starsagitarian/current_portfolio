@@ -210,6 +210,12 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
   drawn in the artwork's own pixels, so they stay on the face at every width; he breathes, blinks,
   glances and rolls his eyes, follows the mouse on a desktop, and glides between his phone, tablet
   and desktop places as the light changes.
+- **Layout.** Every page sits in one shell ([`apps/web/src/components/shell`](apps/web/src/components/shell)):
+  a skip link, the painted scene, a header and the content. Phones and tablets get a menu (a modal
+  dialog, so focus stays in it and Escape closes it) and a tab bar; desktops get the sections in
+  the header. The current section is marked for screen readers and shown in a gold pill. Page
+  content slides in on each change while the scene stays put. Browser tests walk every section by
+  mouse, touch and keyboard.
 
 ## Scripts
 

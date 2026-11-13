@@ -12,7 +12,7 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "Baiju Joseph · Software & Cloud Engineer",
+  title: { default: "Baiju Joseph · Software & Cloud Engineer", template: "%s · Baiju Joseph" },
   description: "Portfolio of Baiju Joseph, software and cloud engineer in London.",
 };
 

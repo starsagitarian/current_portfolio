@@ -5,7 +5,7 @@ test("home page introduces Baiju and links his profiles", async ({ page }) => {
 
   await expect(page).toHaveTitle(/Baiju Joseph/);
   await expect(page.getByRole("heading", { level: 1, name: "Baiju Joseph" })).toBeVisible();
-  await expect(page.getByText("Software & Cloud Engineer")).toBeVisible();
+  await expect(page.getByRole("main").getByText("Software & Cloud Engineer")).toBeVisible();
 
   const profiles = page.getByRole("navigation", { name: "Profiles" });
   await expect(profiles.getByRole("link", { name: "GitHub" })).toHaveAttribute(
