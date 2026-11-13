@@ -54,6 +54,32 @@
   transition: transform 90ms ease-in;
 }
 
+/*
+ * Waving (Menu and Contact): a bust rising from the bottom of the screen, rocking gently from the
+ * shoulders. Pages place it; by default it follows the same glide as the standing figure.
+ */
+.character[data-pose="waving"] {
+  bottom: 0;
+  height: clamp(220px, 42vh, 480px);
+  aspect-ratio: 581 / 556;
+}
+.character[data-pose="waving"]::before {
+  display: none;
+}
+.character[data-pose="waving"] .character-body {
+  animation: character-wave 2.8s ease-in-out infinite;
+}
+
+@keyframes character-wave {
+  0%,
+  100% {
+    transform: rotate(-2.5deg);
+  }
+  50% {
+    transform: rotate(2.5deg);
+  }
+}
+
 @keyframes character-breathe {
   0%,
   100% {
@@ -65,11 +91,33 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .character-body {
+  .character-body,
+  .character[data-pose="waving"] .character-body {
     animation: none;
   }
   .character-pupil,
   .character-lid {
     transition: none;
   }
+}
+
+/* The résumé portrait: a rounded tile in the sky's colour, the bust rising from its lower edge. */
+.avatar {
+  display: inline-block;
+  flex: none;
+  overflow: hidden;
+  border-radius: 22%;
+  background: linear-gradient(
+    180deg,
+    var(--sky-top),
+    color-mix(in oklch, var(--sky-top), white 45%)
+  );
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
 }

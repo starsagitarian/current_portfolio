@@ -205,6 +205,11 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
   and stars. Every loop animates `transform` or `opacity` only, so it runs on the compositor;
   nothing loops for visitors who prefer reduced motion, and everything pauses while the tab is
   hidden ([`apps/web/src/motion`](apps/web/src/motion)). Browser tests check all three.
+- **The character.** Standing on Home, waving on Menu and Contact, and an avatar on the résumé
+  ([`apps/web/src/components/character`](apps/web/src/components/character)). His eyes are SVG
+  drawn in the artwork's own pixels, so they stay on the face at every width; he breathes, blinks,
+  glances and rolls his eyes, follows the mouse on a desktop, and glides between his phone, tablet
+  and desktop places as the light changes.
 
 ## Scripts
 

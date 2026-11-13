@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { site } from "@starsagitarian/shared";
-import { Character } from "@/components/character/Character";
 import { ScenePlates } from "@/components/scene/ScenePlates";
+import { CharacterStage } from "./CharacterStage";
 import { SkyPanel } from "./SkyPanel";
 import "./prototype.css";
 
@@ -27,7 +27,7 @@ export default function PrototypePage() {
           <span className="proto-title">{site.title}</span>
         </span>
       </header>
-      <Character />
+      <CharacterStage />
       <SkyPanel />
     </main>
   );

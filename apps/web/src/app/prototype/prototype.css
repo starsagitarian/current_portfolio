@@ -110,3 +110,28 @@
   opacity: 0.45;
   cursor: default;
 }
+
+.pose-panel {
+  position: absolute;
+  z-index: 1;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 18px;
+  font-size: 0.85rem;
+}
+.pose-panel button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-weight: 600;
+  cursor: pointer;
+}
+.pose-panel button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+}
