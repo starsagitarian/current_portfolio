@@ -121,3 +121,29 @@
   object-fit: cover;
   object-position: 50% 100%;
 }
+
+/*
+ * Standing beside a page's content on wide screens (the résumé and the projects, 1600 px and up,
+ * set by SceneFigure's media query): fixed to the scene like on Home, centred in the clear space
+ * between the content's right edge and the window's. Both pages end their content at the left
+ * padding plus 1200 px (1240 less the 40 px margin); his height is also held to what that space
+ * allows, so he never reaches the content.
+ */
+.scene-figure {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+.page-figure .character {
+  --content-end: calc(clamp(24px, 3vw, 56px) + 1200px);
+  left: calc((var(--content-end) + 100%) / 2);
+  bottom: 2.5vh;
+  height: max(320px, min(66vh, 760px, (100vw - 1350px) * 2.3));
+  animation: figure-arrive 0.8s cubic-bezier(0.2, 0.9, 0.25, 1) 0.15s both;
+}
+@keyframes figure-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}

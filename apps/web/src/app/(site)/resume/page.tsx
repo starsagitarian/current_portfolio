@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Avatar } from "@/components/character/Avatar";
+import { SceneFigure } from "@/components/character/SceneFigure";
 import { formatMonth } from "@/lib/dates";
 import { getProfile } from "@/lib/profile";
 import "@/components/page/page.css";
@@ -56,6 +57,8 @@ export default async function ResumePage() {
 
   return (
     <div className="resume">
+      {/* on wide screens, Baiju stands on the promenade in the clear space beside the reading */}
+      <SceneFigure media="(min-width: 1600px)" className="page-figure" />
       <div className="page-intro resume-intro bare rise">
         <Avatar size={104} className="resume-avatar" />
         <div>
