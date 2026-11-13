@@ -24,11 +24,11 @@ export function SiteHeader() {
   }, [pathname]);
 
   return (
-    <header className="site-header surface">
-      <Link href="/" className="header-home icon-button" aria-label="Home">
+    <header className="site-header">
+      <Link href="/" className="header-home icon-button veil" aria-label="Home">
         <HOME.icon aria-hidden="true" size={22} />
       </Link>
-      <Link href="/" className="header-brand">
+      <Link href="/" className="header-brand bare">
         <span className="header-emblem">
           {/* A pre-optimised static file; skips Vercel's image service and its monthly quota. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -40,7 +40,8 @@ export function SiteHeader() {
         </span>
       </Link>
 
-      <nav aria-label="Sections" className="header-nav">
+      <nav aria-label="Sections" className="header-nav veil">
+        <span className="nav-indicator" aria-hidden="true" />
         {SECTIONS.map((item) => (
           <Link
             key={item.href}
@@ -56,7 +57,7 @@ export function SiteHeader() {
 
       <button
         type="button"
-        className="header-menu icon-button"
+        className="header-menu icon-button veil"
         aria-label="Open menu"
         aria-haspopup="dialog"
         aria-controls="site-menu"
@@ -81,7 +82,7 @@ export function SiteHeader() {
         }}
       >
         <div className="menu-top">
-          <Link href="/" className="icon-button" aria-label="Home">
+          <Link href="/" className="icon-button veil" aria-label="Home">
             <HOME.icon aria-hidden="true" size={22} />
           </Link>
           <span className="menu-brand">
@@ -90,7 +91,7 @@ export function SiteHeader() {
           </span>
           <button
             type="button"
-            className="icon-button"
+            className="icon-button veil"
             aria-label="Close menu"
             onClick={() => {
               dialog.current?.close();

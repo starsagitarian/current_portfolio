@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/* Colours, surfaces and the light that drives them; then the motion rules. */
+/* Colours, glass and the light that drives them, then the motion rules. */
 @import "../sky/tokens.css";
 @import "../motion/motion.css";
 

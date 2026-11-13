@@ -20,7 +20,7 @@ export default function Home() {
         <Character pose="standing" />
       </div>
 
-      <section className="home-intro surface" aria-labelledby="home-title">
+      <section className="home-intro bare rise" aria-labelledby="home-title">
         <h1 id="home-title" className="home-title">
           Hi, I&rsquo;m {site.name.split(" ")[0]}.
         </h1>
@@ -34,7 +34,7 @@ export default function Home() {
             </Link>
           )}
           {others.map((item) => (
-            <Link key={item.href} href={item.href} className="home-action">
+            <Link key={item.href} href={item.href} className="home-action veil">
               <item.icon aria-hidden="true" size={20} />
               {item.label}
             </Link>

@@ -97,22 +97,120 @@
   --shadow: 0 10px 30px rgb(10 15 40 / 0.18);
 }
 
-/* A card, header or panel over the scene. */
-.surface {
-  background: var(--surface);
+/*
+ * ---- Glass. Three tiers, so the painting shows wherever it can:
+ *   bare   text straight on the painting, lifted by a feathered scrim and a soft halo
+ *   veil   frosted glass for controls (tab bar, nav, buttons): a light tint, a strong blur
+ *   card   near-solid panels, only for long reading and forms
+ * Light ink sits on dark glass and dark ink on light glass, flipping with the text at
+ * mid-evening. A browser test measures every line of text against the real painting behind it.
+ */
+:root {
+  --scrim: color-mix(
+    in oklch,
+    oklch(0.985 0.01 85 / 0.74),
+    oklch(0.16 0.045 268 / 0.68) calc(var(--night-ui) * 100%)
+  );
+  --halo: color-mix(
+    in oklch,
+    oklch(0.99 0.01 85 / 0.8),
+    oklch(0.12 0.04 268 / 0.75) calc(var(--night-ui) * 100%)
+  );
+  --veil: color-mix(
+    in oklch,
+    oklch(0.99 0.012 85 / 0.46),
+    oklch(0.2 0.05 268 / 0.5) calc(var(--night-ui) * 100%)
+  );
+  --veil-strong: color-mix(
+    in oklch,
+    oklch(0.985 0.012 85 / 0.86),
+    oklch(0.17 0.05 268 / 0.86) calc(var(--night-ui) * 100%)
+  );
+  --veil-edge: color-mix(
+    in oklch,
+    oklch(1 0 0 / 0.62),
+    oklch(1 0 0 / 0.16) calc(var(--night-ui) * 100%)
+  );
+  --veil-sheen: color-mix(
+    in oklch,
+    oklch(1 0 0 / 0.55),
+    oklch(1 0 0 / 0.14) calc(var(--night-ui) * 100%)
+  );
+  --veil-blur: blur(20px) saturate(1.6);
+  /* a whisper of grain on glass, so the blurred painting never bands */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --glass-shadow:
+    0 1px 0 0 var(--veil-sheen) inset, 0 0 0 1px var(--veil-edge) inset,
+    0 18px 40px -18px rgb(8 12 32 / 0.45);
+  --text-halo: 0 1px 1px var(--halo), 0 0 18px var(--halo);
+}
+
+/* Frosted glass for controls. */
+.veil {
+  background-color: var(--veil);
+  background-image: var(--grain);
   color: var(--ink);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-  /* smooths the flip at mid-evening while the window is dragged across it */
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--veil-blur);
+}
+
+/* Text straight on the painting: a halo for the edges of each letter; the scrim behind whole
+   blocks comes from the component (a feathered ellipse that never shows an edge). */
+.bare {
+  color: var(--ink);
+  text-shadow: var(--text-halo);
+}
+
+/* A card for long reading: near-solid, with the same glass edge and sheen. */
+.surface {
+  background-color: var(--surface);
+  background-image: var(--grain);
+  color: var(--ink);
+  box-shadow: var(--glass-shadow), var(--shadow);
+  backdrop-filter: blur(12px) saturate(1.3);
+}
+
+/* smooths the flip at mid-evening while the window is dragged across it */
+.surface,
+.veil,
+.bare {
   transition:
     background-color 0.35s ease,
     color 0.35s ease,
-    border-color 0.35s ease;
+    text-shadow 0.35s ease;
+}
+
+/*
+ * Visitors who ask for less transparency or more contrast (or use a forced-colour theme) get
+ * solid panels and no halos: transparent by default, solid on request.
+ */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root {
+    --veil: var(--surface-solid);
+    --veil-strong: var(--surface-solid);
+    --scrim: color-mix(in oklch, var(--surface-solid) 94%, transparent);
+    --veil-blur: none;
+    --grain: none;
+  }
+  .surface {
+    background-color: var(--surface-solid);
+  }
+}
+@media (forced-colors: active) {
+  .veil,
+  .surface,
+  .bare {
+    background: Canvas;
+    color: CanvasText;
+    text-shadow: none;
+    border: 1px solid CanvasText;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .surface {
+  .surface,
+  .veil,
+  .bare {
     transition: none;
   }
 }

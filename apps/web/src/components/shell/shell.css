@@ -1,7 +1,8 @@
 /*
- * The layout shell. Phones (under 768 px): centred name, home and menu buttons, a tab bar at the
- * bottom. Tablets (768-1099 px): the name beside the home button, tab bar kept. Desktops
- * (1100 px and wider): emblem and name on the left, the sections on the right, no tab bar.
+ * The layout shell, built so the painting shows through. Phones (under 768 px): name centred,
+ * glass home and menu buttons, a glass tab bar. Tablets (768-1099 px): name beside home.
+ * Desktops (1100 px and wider): the name on the left, the sections in a glass capsule on the
+ * right. The header is clear over the painting and frosts only as content scrolls beneath it.
  */
 
 .site {
@@ -25,7 +26,7 @@
   z-index: 50;
   top: 12px;
   left: 12px;
-  padding: 10px 16px;
+  padding: 10px 18px;
   border-radius: 999px;
   background: var(--accent);
   color: var(--accent-ink);
@@ -42,47 +43,101 @@
   flex: 1;
   flex-direction: column;
   /* clear of the header above and the tab bar below */
-  padding: 104px 16px 112px;
+  padding: 92px 16px 112px;
 }
 .site-main:focus {
   outline: none;
 }
 
+/* Round glass buttons: home and menu. */
 .icon-button {
   display: inline-grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 999px;
   color: var(--ink);
+  transition:
+    translate 0.2s ease,
+    background-color 0.35s ease;
 }
 .icon-button:hover {
-  background: var(--line);
+  translate: 0 -1px;
+}
+.icon-button:active {
+  translate: 0 1px;
 }
 
 /* ---- header */
 .site-header {
   position: fixed;
   z-index: 20;
-  top: 12px;
-  left: 12px;
-  right: 12px;
+  top: 0;
+  left: 0;
+  right: 0;
   display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  grid-template-columns: 46px 1fr 46px;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 22px;
+  gap: 10px;
+  padding: max(12px, env(safe-area-inset-top)) 14px 10px;
+  isolation: isolate;
 }
+/* Frost that fades in as the page scrolls beneath the header: clear at the top, glass below. */
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--veil);
+  background-image: var(--grain);
+  backdrop-filter: var(--veil-blur);
+  box-shadow: 0 1px 0 0 var(--veil-edge);
+  opacity: 0;
+}
+@supports (animation-timeline: scroll()) {
+  .site-header::before {
+    animation: header-frost linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 72px;
+  }
+}
+@supports not (animation-timeline: scroll()) {
+  .site-header::before {
+    opacity: 1;
+  }
+}
+@keyframes header-frost {
+  to {
+    opacity: 1;
+  }
+}
+
 .header-brand {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  justify-self: center;
+  gap: 12px;
   text-align: center;
-  color: var(--ink);
+  /* only as wide as the name, so the pool of light behind it stays a soft round glow */
+  width: max-content;
+  max-width: 100%;
 }
-/* the emblem on a cream badge, so it reads on the dark evening header too */
+/* a feathered pool of light (or shade) behind the name; it has no edge to see */
+.header-brand::before {
+  content: "";
+  position: absolute;
+  inset: -22px -30px;
+  z-index: -1;
+  background: radial-gradient(
+    closest-side,
+    var(--scrim),
+    color-mix(in oklch, var(--scrim) 70%, transparent) 50%,
+    transparent
+  );
+  pointer-events: none;
+}
 .header-emblem {
   display: none;
   place-items: center;
@@ -90,7 +145,9 @@
   height: 46px;
   border-radius: 50%;
   background: oklch(0.975 0.012 85);
-  box-shadow: inset 0 0 0 1px rgb(15 29 58 / 0.08);
+  box-shadow:
+    0 0 0 1px rgb(15 29 58 / 0.08) inset,
+    0 6px 18px -6px rgb(8 12 32 / 0.5);
 }
 .header-emblem img {
   width: 36px;
@@ -98,25 +155,48 @@
 }
 .header-name {
   display: block;
-  font-size: 1.2rem;
+  font-size: 1.22rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
 }
 .header-title {
   display: block;
+  margin-top: 2px;
   font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--ink-muted);
+  /* small letters over a bright sky: a closer, denser halo */
+  text-shadow:
+    0 0 1px var(--halo),
+    0 0 6px var(--halo),
+    0 0 16px var(--halo);
 }
 .header-nav {
   display: none;
 }
 
+/* ---- the gold indicator that marks the current section and slides between them */
+.tab-indicator,
+.nav-indicator {
+  position: absolute;
+  z-index: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / 0.45) inset,
+    0 8px 20px -8px rgb(150 95 10 / 0.75);
+  transition:
+    translate 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.15),
+    opacity 0.25s ease;
+  pointer-events: none;
+}
+
 /* ---- tab bar */
 .tab-bar {
+  --gap: 4px;
+  --pad: 6px;
   position: fixed;
   z-index: 20;
   bottom: max(12px, env(safe-area-inset-bottom));
@@ -124,53 +204,79 @@
   translate: -50% 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  width: min(440px, calc(100% - 24px));
-  padding: 6px;
-  border-radius: 24px;
+  gap: var(--gap);
+  width: min(420px, calc(100% - 28px));
+  padding: var(--pad);
+  border-radius: 999px;
+}
+.tab-indicator {
+  top: var(--pad);
+  bottom: var(--pad);
+  left: var(--pad);
+  width: calc((100% - 2 * var(--pad) - 2 * var(--gap)) / 3);
+  translate: calc(var(--tab, 0) * (100% + var(--gap))) 0;
+}
+.tab-bar:not([data-current]) .tab-indicator {
+  opacity: 0;
 }
 .tab {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 8px 4px;
-  border-radius: 18px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  padding: 8px 4px 7px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   color: var(--ink);
+  transition:
+    color 0.3s ease,
+    scale 0.15s ease;
 }
-
-/* the current section: a gold pill, in the tab bar and the desktop navigation alike */
-.tab[aria-current="page"],
-.nav-link[aria-current="page"] {
-  background: var(--accent);
+.tab:active {
+  scale: 0.96;
+}
+.tab[aria-current="page"] {
   color: var(--accent-ink);
-}
-.tab:not([aria-current="page"]):hover,
-.nav-link:not([aria-current="page"]):hover {
-  background: var(--line);
 }
 
 @media (min-width: 768px) {
   .tab-bar-home {
     display: none;
   }
-  .site-header {
-    grid-template-columns: 44px 1fr 44px;
-  }
   .header-brand {
     justify-content: flex-start;
+    justify-self: start;
     text-align: left;
+  }
+  .header-brand::before {
+    inset: -22px -34px -22px -22px;
   }
 }
 
 @media (min-width: 1100px) {
   .site-header {
-    left: 24px;
-    right: 24px;
     grid-template-columns: auto 1fr;
-    padding: 10px 14px;
+    padding: 18px clamp(24px, 3vw, 56px) 14px;
+  }
+  /* the hairline from the mockup, fading out at both ends */
+  .site-header::after {
+    content: "";
+    position: absolute;
+    left: clamp(24px, 3vw, 56px);
+    right: clamp(24px, 3vw, 56px);
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--veil-edge) 12%,
+      var(--veil-edge) 88%,
+      transparent
+    );
   }
   .header-home,
   .header-menu {
@@ -179,29 +285,75 @@
   .header-emblem {
     display: grid;
   }
+  .header-name {
+    font-size: 1.35rem;
+  }
+  /* the sections in a glass capsule, the current one under the sliding gold pill */
   .header-nav {
+    position: relative;
     display: flex;
     justify-self: end;
-    gap: 8px;
+    gap: 4px;
+    padding: 5px;
+    border-radius: 999px;
   }
   .nav-link {
+    position: relative;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 18px;
+    padding: 10px 20px;
     border-radius: 999px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ink);
+    transition: color 0.3s ease;
+  }
+  .nav-link[aria-current="page"] {
+    color: var(--accent-ink);
+  }
+  .nav-link:not([aria-current="page"]):hover {
+    background: var(--veil-edge);
   }
   .tab-bar {
     display: none;
   }
   .site-main {
-    padding: 120px 24px 40px;
+    padding: 112px clamp(24px, 3vw, 56px) 40px;
   }
 }
 
-/* ---- menu (phones and tablets) */
+/* Anchor positioning lets one pill glide to whichever link is current. Where it is not
+   supported, the current link simply wears the gold itself. */
+@supports (anchor-name: --a) {
+  .nav-link[aria-current="page"] {
+    anchor-name: --nav-current;
+  }
+  .nav-indicator {
+    position-anchor: --nav-current;
+    top: anchor(top);
+    bottom: anchor(bottom);
+    left: anchor(left);
+    right: anchor(right);
+    transition:
+      left 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.15),
+      right 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.15),
+      opacity 0.25s ease;
+  }
+  .header-nav:not(:has([aria-current="page"])) .nav-indicator {
+    opacity: 0;
+  }
+}
+@supports not (anchor-name: --a) {
+  .nav-indicator {
+    display: none;
+  }
+  .nav-link[aria-current="page"] {
+    background: var(--accent);
+  }
+}
+
+/* ---- menu (phones and tablets): a sheet of strong glass that fades in, links rising */
 .site-menu {
   position: fixed;
   inset: 0;
@@ -210,26 +362,38 @@
   height: 100%;
   max-height: none;
   margin: 0;
-  padding: 12px;
+  padding: max(12px, env(safe-area-inset-top)) 14px 14px;
   border: none;
   overflow: hidden;
   color: var(--ink);
-  background: color-mix(in oklch, var(--surface-solid) 90%, transparent);
-  backdrop-filter: blur(18px) saturate(1.2);
+  background-color: var(--veil-strong);
+  background-image: var(--grain);
+  backdrop-filter: blur(30px) saturate(1.4);
+  opacity: 0;
+  transition:
+    opacity 0.3s ease,
+    display 0.3s allow-discrete,
+    overlay 0.3s allow-discrete;
 }
 .site-menu[open] {
   display: flex;
   flex-direction: column;
+  opacity: 1;
+}
+@starting-style {
+  .site-menu[open] {
+    opacity: 0;
+  }
 }
 .site-menu::backdrop {
   background: transparent;
 }
 .menu-top {
   display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  grid-template-columns: 46px 1fr 46px;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding-bottom: 10px;
 }
 .menu-brand {
   text-align: center;
@@ -240,36 +404,56 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(320px, 100%);
-  margin: 4vh auto 0;
+  width: min(340px, 100%);
+  margin: 3vh auto 0;
 }
 .menu-links a {
   width: 100%;
   padding: 14px 0;
   border-bottom: 1px solid var(--line);
   text-align: center;
-  font-size: clamp(1.6rem, 6vw, 2.1rem);
+  font-size: clamp(1.7rem, 6.5vw, 2.3rem);
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--ink);
+  transition:
+    translate 0.5s cubic-bezier(0.2, 0.9, 0.25, 1),
+    opacity 0.5s ease;
 }
 .menu-links a:last-child {
   border-bottom: none;
+}
+/* the links rise in one after another as the menu opens */
+@starting-style {
+  .site-menu[open] .menu-links a {
+    translate: 0 16px;
+    opacity: 0;
+  }
+}
+.menu-links a:nth-child(2) {
+  transition-delay: 0.04s;
+}
+.menu-links a:nth-child(3) {
+  transition-delay: 0.08s;
+}
+.menu-links a:nth-child(4) {
+  transition-delay: 0.12s;
 }
 .menu-links a[aria-current="page"] {
   text-decoration: underline;
   text-decoration-color: var(--accent);
   text-decoration-thickness: 4px;
-  text-underline-offset: 8px;
+  text-underline-offset: 9px;
 }
 .site-menu .menu-character {
   left: 50%;
-  height: clamp(200px, 36vh, 420px);
+  height: clamp(200px, 38vh, 440px);
 }
 .menu-profiles {
   position: absolute;
   z-index: 1;
   left: 50%;
-  bottom: max(20px, env(safe-area-inset-bottom));
+  bottom: max(22px, env(safe-area-inset-bottom));
   translate: -50% 0;
   display: flex;
   gap: 12px;
@@ -282,24 +466,36 @@
   border-radius: 999px;
   background: oklch(0.975 0.012 85);
   color: oklch(0.24 0.05 262);
-  font-weight: 600;
-  box-shadow: var(--shadow);
+  font-weight: 700;
+  box-shadow: 0 10px 26px -10px rgb(8 12 32 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-menu,
+  .menu-links a,
+  .tab-indicator,
+  .nav-indicator,
+  .tab,
+  .nav-link,
+  .icon-button {
+    transition: none;
+  }
 }
 
 /*
- * ---- page changes: the content fades in and its cards rise into place; the sky, the scene and
- * the character stay put. The page itself only fades (no transform), so anything fixed inside it,
- * like the character, keeps its place on the screen. "backwards" holds the start state before
- * the animation runs and lets go afterwards, so nothing lingers.
+ * ---- page changes: the content fades in and its panels rise into place; the sky, the scene
+ * and the character stay put. The page itself only fades (no transform), so anything fixed
+ * inside it, like the character, keeps its place. "backwards" holds the start state before the
+ * animation runs and lets go afterwards, so nothing lingers.
  */
 .page {
   display: flex;
   flex: 1;
   flex-direction: column;
-  animation: page-fade 0.4s ease-out backwards;
+  animation: page-fade 0.45s ease-out backwards;
 }
-.page .surface {
-  animation: page-rise 0.4s ease-out backwards;
+.page :is(.surface, .veil, .rise) {
+  animation: page-rise 0.6s cubic-bezier(0.2, 0.9, 0.25, 1) backwards;
 }
 @keyframes page-fade {
   from {
@@ -308,6 +504,6 @@
 }
 @keyframes page-rise {
   from {
-    transform: translateY(14px);
+    transform: translateY(18px);
   }
 }

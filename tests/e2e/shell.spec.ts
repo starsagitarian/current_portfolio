@@ -21,7 +21,26 @@ async function expectCurrent(page: Page, nav: string, name: string) {
   await expect(
     page.getByRole("navigation", { name: nav }).locator('[aria-current="page"]'),
   ).toHaveCount(1);
-  await expect(links.filter({ hasText: name })).toHaveCSS("background-color", GOLD);
+
+  // The gold pill slides under the current link (a separate element, so it can glide between
+  // links); browsers without anchor positioning paint the link itself gold instead.
+  const current = links.filter({ hasText: name });
+  const pill = page
+    .getByRole("navigation", { name: nav })
+    .locator(".tab-indicator, .nav-indicator")
+    .filter({ visible: true });
+  if ((await pill.count()) === 0) {
+    await expect(current).toHaveCSS("background-color", GOLD);
+    return;
+  }
+  await expect(pill).toHaveCSS("background-color", GOLD);
+  await expect
+    .poll(async () => {
+      const [a, b] = [await current.boundingBox(), await pill.boundingBox()];
+      if (a === null || b === null) return Infinity;
+      return Math.abs(a.x + a.width / 2 - (b.x + b.width / 2));
+    })
+    .toBeLessThan(2);
 }
 
 test("every section is reachable by mouse from the desktop navigation", async ({ page }, info) => {
