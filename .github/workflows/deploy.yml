@@ -153,6 +153,9 @@ jobs:
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$web/resume" | grep -q "Experience"
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "site cv %{http_code} %{content_type}\n" \
             "$web/resume/cv.pdf" | tee /dev/stderr | grep -q "application/pdf"
+          # the projects, filtered in the address, and one project's own page
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$web/projects?tag=data" | grep -q "Lightning observation"
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$web/projects/lightning-observation" | grep -q "About the project"
           {
             echo "### ${{ inputs.environment }} deployment"
             echo "| | URL |"

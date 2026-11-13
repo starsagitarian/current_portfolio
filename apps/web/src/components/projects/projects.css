@@ -1,0 +1,440 @@
+/*
+ * Projects: the list (a filter capsule over a grid of glass tiles) and each project's own page
+ * (bare title beside its drawing, then the write-up on dissolving glass).
+ */
+.projects,
+.project-page {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(28px, 5vh, 48px);
+  width: 100%;
+  max-width: 1240px;
+}
+
+/* ---- the filter: chips in a glass capsule, a gold pill gliding to the chosen one */
+.project-filter {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  gap: 2px;
+  max-width: 100%;
+  margin-left: clamp(0px, 2vw, 40px);
+  padding: 5px;
+  border-radius: 999px;
+  background-color: var(--veil);
+  background-image: var(--grain);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--veil-blur);
+}
+.filter-chip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition:
+    color 0.3s ease,
+    background-color 0.2s ease;
+}
+.filter-chip:hover:not([aria-current]) {
+  background-color: color-mix(in oklch, var(--ink) 9%, transparent);
+}
+.filter-chip[aria-current] {
+  color: var(--accent-ink);
+}
+.filter-count {
+  min-width: 1.6em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in oklch, currentColor 13%, transparent);
+  font-size: 0.76rem;
+  text-align: center;
+}
+/* the narrowest phones keep the words and drop the counts (screen readers still hear them) */
+@media (max-width: 399.98px) {
+  .filter-chip {
+    padding: 0 13px;
+  }
+  .filter-count {
+    display: none;
+  }
+}
+
+.filter-indicator {
+  position: absolute;
+  z-index: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / 0.45) inset,
+    0 8px 20px -8px rgb(150 95 10 / 0.75);
+  pointer-events: none;
+}
+@supports (anchor-name: --a) {
+  .filter-chip[aria-current] {
+    anchor-name: --filter-current;
+  }
+  .filter-indicator {
+    position-anchor: --filter-current;
+    top: anchor(top);
+    bottom: anchor(bottom);
+    left: anchor(left);
+    right: anchor(right);
+    transition:
+      left 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.15),
+      right 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.15);
+  }
+}
+@supports not (anchor-name: --a) {
+  .filter-indicator {
+    display: none;
+  }
+  .filter-chip[aria-current] {
+    background: var(--accent);
+  }
+}
+
+/* ---- the grid of tiles */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: clamp(18px, 2.4vw, 28px);
+  margin-inline: clamp(0px, 2vw, 40px);
+}
+.project-cell {
+  display: flex;
+}
+
+.project-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px;
+  border-radius: 28px;
+  /* between the controls' veil and the reading glass: the painting still glows through */
+  background-color: color-mix(in oklch, var(--veil), var(--veil-strong) 45%);
+  background-image: var(--grain);
+  color: var(--ink);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--veil-blur);
+  transition:
+    translate 0.35s cubic-bezier(0.2, 0.9, 0.25, 1.2),
+    box-shadow 0.35s ease,
+    background-color 0.35s ease;
+}
+@media (hover: hover) {
+  .project-tile:hover {
+    translate: 0 -5px;
+    box-shadow:
+      var(--glass-shadow),
+      0 30px 50px -24px rgb(8 12 32 / 0.6);
+  }
+  .project-tile:hover .tile-arrow {
+    translate: 5px 0;
+  }
+}
+/* one link per tile, stretched over all of it; the ring goes round the whole tile */
+.tile-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+}
+.tile-link:focus-visible {
+  outline: none;
+}
+.project-tile:has(.tile-link:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.tile-badge {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px 5px 9px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 14px -6px rgb(150 95 10 / 0.8);
+}
+.tile-badge svg {
+  fill: currentColor;
+}
+.tile-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 16px 12px 8px;
+}
+.tile-org,
+.project-kicker {
+  color: var(--ink-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.tile-title {
+  margin-top: 6px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.tile-summary {
+  flex: 1;
+  margin-top: 8px;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+.tile-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+.tile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tile-tags li {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.tile-arrow {
+  flex: none;
+  transition: translate 0.3s cubic-bezier(0.2, 0.9, 0.25, 1.2);
+}
+
+/* ---- a project's own page */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  min-height: 44px;
+  margin-left: clamp(0px, 2vw, 40px);
+  padding: 0 18px 0 14px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.back-link svg {
+  transition: translate 0.3s cubic-bezier(0.2, 0.9, 0.25, 1.2);
+}
+.back-link:hover svg {
+  translate: -4px 0;
+}
+
+.project-head {
+  display: grid;
+  gap: clamp(32px, 5vh, 48px) clamp(32px, 4vw, 64px);
+  align-items: center;
+}
+@media (min-width: 1100px) {
+  .project-head {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  }
+}
+.project-head .page-intro {
+  margin-top: 0;
+}
+/* a taller block than other intros (kicker, two-line title, long lede, tags), so a deeper,
+   wider pool behind it: the lede must stay readable over the lit towers at night */
+.project-head .page-intro::before {
+  inset: -18% -12% -20% -14%;
+  background: radial-gradient(
+    closest-side,
+    var(--scrim) 0%,
+    var(--scrim) 64%,
+    color-mix(in oklch, var(--scrim) 45%, transparent) 84%,
+    transparent
+  );
+}
+/* small capitals at the faint top edge of that pool: a closer, denser halo, as in the header */
+.project-head .project-kicker {
+  color: var(--ink);
+  font-size: 0.8rem;
+  text-shadow:
+    0 0 1px var(--halo),
+    0 0 6px var(--halo),
+    0 0 16px var(--halo);
+}
+.project-head .page-title {
+  margin-top: 10px;
+  font-size: clamp(2.4rem, 6.4vw, 4rem);
+}
+.project-head .page-lede {
+  max-width: 40ch;
+}
+/* the project's tags: frosted pills that open the list filtered to that tag */
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+.project-tags a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-shadow: none;
+}
+.project-tags a:hover {
+  background-color: var(--veil-strong);
+}
+
+.project-hero {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: clamp(0px, 2vw, 40px);
+  padding: 10px;
+  border-radius: 30px;
+  background-color: color-mix(in oklch, var(--veil), var(--veil-strong) 30%);
+  background-image: var(--grain);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--veil-blur);
+}
+@media (min-width: 1100px) {
+  .project-hero {
+    justify-self: end;
+    margin-inline: 0 clamp(0px, 2vw, 40px);
+  }
+}
+.project-art-hero {
+  border-radius: 22px;
+}
+
+.project-detail {
+  display: grid;
+  gap: clamp(48px, 8vh, 72px) 64px;
+  margin-inline: clamp(0px, 2vw, 40px);
+}
+@media (min-width: 1100px) {
+  .project-detail {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.project-section-title {
+  margin-bottom: 16px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.project-body p {
+  max-width: 65ch;
+  font-size: 1.06rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+.project-body p + p {
+  margin-top: 1em;
+}
+.project-facts > * + * {
+  margin-top: clamp(28px, 4vh, 40px);
+}
+.project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.project-links .button:not(.button-gold) {
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.project-note {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* previous and next: two glass links, so the next project is one tap away */
+.project-pager {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+  margin-inline: clamp(0px, 2vw, 40px);
+}
+.pager-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 14px 22px;
+  border-radius: 24px;
+  transition: translate 0.3s cubic-bezier(0.2, 0.9, 0.25, 1.2);
+}
+.pager-link:hover {
+  translate: 0 -3px;
+}
+.pager-next {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.pager-label {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.pager-title {
+  display: block;
+  margin-top: 2px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.pager-link svg {
+  flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-tile,
+  .tile-arrow,
+  .filter-chip,
+  .filter-indicator,
+  .back-link svg,
+  .pager-link {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .project-tile,
+  .project-hero,
+  .project-filter {
+    border: 1px solid CanvasText;
+  }
+  .filter-chip[aria-current] {
+    outline: 2px solid Highlight;
+  }
+}

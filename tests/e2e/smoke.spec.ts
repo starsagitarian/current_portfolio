@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("home page introduces Baiju and links his profiles", async ({ page }) => {
+test("home page introduces Baiju and links the profiles", async ({ page }) => {
   await page.goto("/");
 
   await expect(page).toHaveTitle(/Baiju Joseph/);
@@ -13,7 +13,7 @@ test("home page introduces Baiju and links his profiles", async ({ page }) => {
   await expect(page.locator('a[href^="https://www.linkedin.com/in/"]').first()).toBeAttached();
 });
 
-for (const path of ["/", "/resume", "/projects", "/contact"]) {
+for (const path of ["/", "/resume", "/projects", "/projects/lightning-observation", "/contact"]) {
   test(`${path} never scrolls sideways`, async ({ page }) => {
     await page.goto(path);
     const overflow = await page.evaluate(

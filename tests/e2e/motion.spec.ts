@@ -5,7 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
  * for visitors who ask for reduced motion, and everything pauses while the tab is hidden.
  */
 
-const PAGES = ["/", "/prototype"];
+// (a project page: its drawing has loops of its own)
+const PAGES = ["/", "/prototype", "/projects/lightning-observation"];
 
 /** Properties a loop may animate without forcing layout or paint. */
 const COMPOSITED = new Set(["transform", "opacity", "translate", "scale", "rotate"]);

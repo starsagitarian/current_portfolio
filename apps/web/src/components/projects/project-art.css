@@ -1,0 +1,204 @@
+/*
+ * The project drawings. Every colour is a scene token, so the drawings follow the light: paper
+ * by day turns to navy glass at night, and the ink flips with the text.
+ */
+.project-art {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  color: var(--ink);
+  /* a pane of the sky behind each drawing, warmed by the star's gold in one corner */
+  background:
+    radial-gradient(
+      120% 90% at 85% 0%,
+      color-mix(in oklch, var(--accent) 30%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      170deg,
+      color-mix(in oklch, var(--sky-top) 34%, transparent),
+      color-mix(in oklch, var(--cloud) 26%, transparent)
+    );
+  box-shadow: 0 0 0 1px var(--veil-edge) inset;
+}
+.project-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 5% 6%;
+  overflow: visible;
+}
+
+/* lines first, fills after: a shape that has both takes its fill from the second class */
+.project-art .a-line,
+.project-art .a-fine,
+.project-art .a-gold-line,
+.project-art .a-on-gold,
+.project-art .a-shimmer,
+.project-art .a-paper-edge {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.project-art .a-line {
+  stroke: currentColor;
+  stroke-width: 2.5;
+}
+.project-art .a-fine {
+  stroke: currentColor;
+  stroke-width: 1.6;
+  opacity: 0.55;
+}
+.project-art .a-gold-line {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.project-art .a-on-gold {
+  stroke: var(--accent-ink);
+  stroke-width: 2.5;
+}
+.project-art .a-thin {
+  stroke-width: 2;
+}
+.project-art .a-dashed {
+  stroke-dasharray: 2 6;
+}
+.project-art .a-shimmer {
+  stroke: var(--shimmer);
+  stroke-width: 2.5;
+  opacity: 0.8;
+}
+.project-art .a-paper-edge {
+  stroke: var(--surface-solid);
+  stroke-width: 3.2;
+  stroke-linecap: butt;
+}
+
+.project-art .a-paper {
+  fill: var(--surface-solid);
+}
+.project-art .a-soft {
+  fill: color-mix(in oklch, currentColor 13%, transparent);
+}
+.project-art .a-dot {
+  fill: currentColor;
+}
+.project-art .a-gold {
+  fill: var(--accent);
+}
+.project-art .a-gold-soft {
+  fill: color-mix(in oklch, var(--accent) 32%, transparent);
+}
+.project-art .a-on-gold-fill {
+  fill: var(--accent-ink);
+}
+.project-art .a-water {
+  fill: color-mix(in oklch, var(--sky-top) 72%, oklch(0.25 0.06 262));
+}
+.project-art .a-stop-sky {
+  stop-color: var(--sky-top);
+}
+.project-art .a-stop-cloud {
+  stop-color: var(--cloud);
+}
+
+/*
+ * A little life when a tile is hovered, and always in the hero of a project's own page: a gentle
+ * bob, data flowing, a flash, a turn, a ping. Transform and opacity only, so it all runs on the
+ * compositor; nothing moves for visitors who ask for less motion (see motion.css).
+ */
+.project-art :is(.a-float, .a-flow, .a-spin, .a-ping, .a-pop) {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(.project-tile:hover, .project-art-hero) .a-float {
+    animation: art-float 3.2s ease-in-out infinite alternate;
+  }
+  :is(.project-tile:hover, .project-art-hero) .a-flow {
+    animation: art-flow 1.6s ease-in-out infinite;
+  }
+  :is(.project-tile:hover, .project-art-hero) .a-flash {
+    animation: art-flash 2.4s ease-in-out infinite;
+  }
+  :is(.project-tile:hover, .project-art-hero) .a-spin {
+    animation: art-spin 9s linear infinite;
+  }
+  :is(.project-tile:hover, .project-art-hero) .a-ping {
+    animation: art-ping 2.4s ease-out infinite;
+  }
+  :is(.project-tile:hover, .project-art-hero) .a-later {
+    animation-delay: -1.2s;
+  }
+  .project-tile:hover .a-pop {
+    animation: art-pop 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.4) both;
+  }
+}
+@keyframes art-float {
+  from {
+    transform: translateY(2px);
+  }
+  to {
+    transform: translateY(-4px);
+  }
+}
+@keyframes art-flow {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  30%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(14px);
+    opacity: 0;
+  }
+}
+@keyframes art-flash {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.7;
+  }
+}
+@keyframes art-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes art-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+@keyframes art-pop {
+  from {
+    transform: scale(0.85);
+  }
+}
+
+@media (forced-colors: active) {
+  .project-art {
+    background: Canvas;
+    forced-color-adjust: none;
+    color: CanvasText;
+  }
+}

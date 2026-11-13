@@ -30,3 +30,60 @@ html[data-motion-paused] *::after {
     }
   }
 }
+
+/*
+ * View transitions (React's <ViewTransition>, run by the browser). Only named things animate:
+ * a project's drawing morphs from its tile to the top of its page and back, and tiles glide,
+ * fade in and fade out as the filter changes. The page itself does not cross-fade (its own fade
+ * on arrival is enough), and nothing on the page stops taking clicks while a transition runs.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(.morph) {
+  animation-duration: 0.55s;
+  animation-timing-function: cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+::view-transition-image-pair(.morph) {
+  animation: morph-soften 0.55s ease-in-out;
+}
+@keyframes morph-soften {
+  40% {
+    filter: blur(2px);
+  }
+}
+::view-transition-group(.tile-move) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+::view-transition-new(.tile-in) {
+  animation: tile-in 0.4s cubic-bezier(0.2, 0.9, 0.25, 1) 0.12s both;
+}
+::view-transition-old(.tile-out) {
+  animation: tile-out 0.2s ease-in both;
+}
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.95);
+  }
+}
+@keyframes tile-out {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-image-pair(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

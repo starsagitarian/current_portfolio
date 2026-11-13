@@ -182,7 +182,14 @@ test.describe("text contrast against the real painting", () => {
   });
 
   // One test per page, so they run side by side and each stays well inside its time limit.
-  for (const path of ["/resume", "/projects", "/contact"]) {
+  for (const path of [
+    "/resume",
+    "/projects",
+    "/projects?tag=data",
+    "/projects/book-content-pipelines",
+    "/projects/lightning-observation",
+    "/contact",
+  ]) {
     test(`${path}, at every 40 px`, async ({ browser }) => {
       const context = await browser.newContext({ reducedMotion: "reduce" });
       const page = await context.newPage();
@@ -216,6 +223,27 @@ test.describe("text contrast against the real painting", () => {
     expect(failures, failures.slice(0, 12).join("\n")).toEqual([]);
   });
 
+  test("the projects, top to bottom, at six widths", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    const failures: string[] = [];
+    for (const path of ["/projects", "/projects/portfolio-platform"]) {
+      for (const width of [320, 390, 768, 1024, 1280, 1920]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(path);
+        const height = await page.evaluate(() => document.documentElement.scrollHeight);
+        for (let y = 0; y < height; y += 640) {
+          await page.evaluate((top) => {
+            window.scrollTo(0, top);
+          }, y);
+          failures.push(...(await measure(page)).map((p) => `${path} ${width} px at ${y}: ${p}`));
+        }
+      }
+    }
+    await context.close();
+    expect(failures, failures.slice(0, 12).join("\n")).toEqual([]);
+  });
+
   test("the menu, at phone and tablet widths", async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
@@ -223,6 +251,8 @@ test.describe("text contrast against the real painting", () => {
     for (const width of [320, 375, 430, 600, 768, 820, 1024]) {
       await page.setViewportSize({ width, height: 860 });
       await page.goto("/projects");
+      // the button only works once the page has hydrated
+      await page.waitForLoadState("networkidle");
       await page.getByRole("button", { name: "Open menu" }).click();
       await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible();
       failures.push(...(await measure(page)).map((p) => `menu ${width} px: ${p}`));

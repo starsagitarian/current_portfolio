@@ -215,6 +215,14 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
   when the API is down; a test keeps the copy in step (`npm run snapshot -w @starsagitarian/api`).
   The CV downloads from the site's own `/resume/cv.pdf`, which fetches it from the API. Set
   `API_URL` to where the web server reaches the API (compose and the deploy workflow do).
+- **Projects.** Built from `GET /v1/projects`, cached for an hour with the same bundled fallback,
+  so the site builds and serves with the API switched off. Each project has a glass tile with its
+  own SVG drawing in the scene's colours, and a page of its own (`/projects/<slug>`, built ahead).
+  The filter lives in the address (`?tag=web`): the server renders the filtered list, so a shared
+  link or a refresh is right from the first paint, and choosing a filter after that updates the
+  address and the grid at once, with no trip to the server; back and forward step through it.
+  React's `<ViewTransition>` morphs a project's drawing from its tile to its page, and the tiles
+  glide as the filter changes. Without JavaScript, every project is still listed and linked.
 - **Layout.** Every page sits in one shell ([`apps/web/src/components/shell`](apps/web/src/components/shell)):
   a skip link, the painted scene, a header and the content. Phones and tablets get a menu (a modal
   dialog, so focus stays in it and Escape closes it) and a tab bar; desktops get the sections in
