@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: monorepoRoot,
   cacheComponents: true,
+  experimental: {
+    // The stylesheets (about 20 KB in all) come inside the page instead of as separate files, so
+    // the first paint waits for no extra round trips: most visitors are here for the first time.
+    inlineCss: true,
+  },
   partialPrefetching: true,
   agentRules: false,
   transpilePackages: ["@starsagitarian/shared"],
