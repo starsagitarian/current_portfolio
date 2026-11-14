@@ -104,6 +104,11 @@ jobs:
           LHCI_BASE_URL: http://localhost:3000
         run: |
           export CHROME_PATH="$(node -e "console.log(require('@playwright/test').chromium.executablePath())")"
+          # the CPU slowdown that makes this runner imitate the budgets' phone (runners vary)
+          LHCI_CPU_SLOWDOWN="$(node scripts/lighthouse-calibrate.mjs "$LHCI_BASE_URL")"
+          echo "LHCI_CPU_SLOWDOWN=$LHCI_CPU_SLOWDOWN" >> "$GITHUB_ENV"
+          echo "CPU slowdown for this runner: ${LHCI_CPU_SLOWDOWN}x" >> "$GITHUB_STEP_SUMMARY"
+          export LHCI_CPU_SLOWDOWN
           npx lhci collect --config=lighthouserc.cjs
           npx lhci upload --config=lighthouserc.cjs
           node scripts/lighthouse-summary.mjs .lighthouseci/4g "Lighthouse on a 4G phone (budgets)" >> "$GITHUB_STEP_SUMMARY"

@@ -4,14 +4,17 @@
  */
 // Lighthouse CI loads its configuration as CommonJS
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { PAGES, base } = require("./lighthouserc.cjs");
+const { PAGES, base, cpuSlowdownMultiplier } = require("./lighthouserc.cjs");
 
 module.exports = {
   ci: {
     collect: {
       url: PAGES.map((path) => `${base}${path}`),
       numberOfRuns: 1,
-      settings: { chromeFlags: "--no-sandbox --headless=new" },
+      settings: {
+        chromeFlags: "--no-sandbox --headless=new",
+        throttling: { rttMs: 150, throughputKbps: 1638.4, cpuSlowdownMultiplier },
+      },
     },
     assert: {
       assertions: {
