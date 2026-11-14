@@ -63,6 +63,9 @@ function collectText(): TextBox[] {
     const text = node.textContent?.trim() ?? "";
     const parent = node.parentElement;
     if (text === "" || parent?.closest("script, style, noscript") !== null) continue;
+    // folded away in a closed <details> (all but its summary): not on screen
+    const folded = parent.closest("details:not([open])");
+    if (folded !== null && parent.closest("summary") === null) continue;
     const range = document.createRange();
     range.selectNodeContents(node);
     const rect = range.getBoundingClientRect();
@@ -189,6 +192,8 @@ test.describe("text contrast against the real painting", () => {
     "/projects/book-content-pipelines",
     "/projects/lightning-observation",
     "/contact",
+    "/contact/sent",
+    "/contact/not-sent/busy",
   ]) {
     test(`${path}, at every 40 px`, async ({ browser }) => {
       const context = await browser.newContext({ reducedMotion: "reduce" });
@@ -239,6 +244,42 @@ test.describe("text contrast against the real painting", () => {
           failures.push(...(await measure(page)).map((p) => `${path} ${width} px at ${y}: ${p}`));
         }
       }
+    }
+    await context.close();
+    expect(failures, failures.slice(0, 12).join("\n")).toEqual([]);
+  });
+
+  test("the contact form's errors and thank-you, at six widths", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    // stand-ins for Cloudflare's widget and the API, so nothing is sent
+    await page.route("https://challenges.cloudflare.com/**", (route) =>
+      route.fulfill({
+        contentType: "text/javascript",
+        body: "window.turnstile={render(e,o){setTimeout(()=>o.callback('t'),20);return 'w'},reset(){},remove(){}}",
+      }),
+    );
+    await page.route("**/v1/contact", (route) =>
+      route.fulfill({ status: 202, json: { status: "received" } }),
+    );
+    const failures: string[] = [];
+    for (const width of [320, 390, 768, 1024, 1280, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/contact");
+      await expect(page.locator("form.contact-form")).toHaveAttribute("novalidate", "");
+      await page.getByRole("button", { name: "Send message" }).click();
+      await page.getByRole("main").getByLabel("Email", { exact: true }).fill("not-an-email");
+      await page.locator("form.contact-form").evaluate((form) => {
+        form.scrollIntoView({ block: "center" });
+      });
+      failures.push(...(await measure(page)).map((p) => `errors ${width} px: ${p}`));
+
+      await page.getByRole("main").getByLabel("Name", { exact: true }).fill("Ada");
+      await page.getByRole("main").getByLabel("Email", { exact: true }).fill("ada@example.com");
+      await page.getByRole("main").getByLabel("Message", { exact: true }).fill("Hello");
+      await page.getByRole("button", { name: "Send message" }).click();
+      await expect(page.getByRole("heading", { name: "Thank you, Ada." })).toBeVisible();
+      failures.push(...(await measure(page)).map((p) => `sent ${width} px: ${p}`));
     }
     await context.close();
     expect(failures, failures.slice(0, 12).join("\n")).toEqual([]);
