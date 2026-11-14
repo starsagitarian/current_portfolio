@@ -254,6 +254,17 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
 - **Credits.** [`/credits`](https://starsagitarian.vercel.app/credits) and
   [`CREDITS.md`](CREDITS.md) list the artwork, typeface, icons, software and services, with their
   licences; the longer pages end with a line linking to them and to this repository.
+- **Quality budgets.** CI runs the production build through:
+  - Lighthouse on a mid-range phone on 4G: performance, accessibility, best practices and SEO
+    at least 95, Largest Contentful Paint under 2.5 s, layout shift under 0.05, blocking time
+    under 150 ms (the lab stand-in for Interaction to Next Paint). The harsher slow-4G view is
+    reported alongside; both tables land in the run summary.
+  - First-load JavaScript under 160 KB gzipped, the site's own code under 45 KB of it
+    ([`budgets.spec.ts`](tests/e2e/budgets.spec.ts)).
+  - An axe-core audit (WCAG 2.2 AA) of every page and state, at three widths.
+  - The essentials in Firefox, desktop Safari and an iPhone as well as Chrome and Android
+    ([`browsers.spec.ts`](tests/e2e/browsers.spec.ts)).
+  - Visual references of the main pages at three sizes.
 - **Layout.** Every page sits in one shell ([`apps/web/src/components/shell`](apps/web/src/components/shell)):
   a skip link, the painted scene, a header and the content. Phones and tablets get a menu (a modal
   dialog, so focus stays in it and Escape closes it) and a tab bar; desktops get the sections in
@@ -273,6 +284,8 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
 | `npm run test:unit`                      | Unit and API tests only, no Docker needed                        |
 | `npm run test:db`                        | Database tests against PostgreSQL 17 started by Testcontainers   |
 | `npm run test:e2e`                       | Browser tests (Playwright); run `npx playwright install` once    |
+| `npm run test:visual:update`             | Remakes the visual references (Linux, in Playwright's container) |
+| `npm run lighthouse`                     | Lighthouse budgets against `LHCI_BASE_URL` (a production build)  |
 | `npm run openapi -w @starsagitarian/api` | Regenerates the committed OpenAPI document                       |
 | `npm run db:migrate`                     | Applies pending migrations                                       |
 | `npm run db:rollback`                    | Undoes the latest migration (`-- --all` for every one)           |

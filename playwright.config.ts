@@ -27,11 +27,21 @@ export default defineConfig({
       name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
-    // Safari's engine, for what only it gets wrong (the full cross-browser pass is SP-20)
+    // Other engines run the checks that differ between browsers (the rest run in Chrome).
     {
       name: "webkit",
-      testMatch: /scene-resize\.spec\.ts/,
+      testMatch: /(scene-resize|browsers)\.spec\.ts/,
       use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      name: "firefox",
+      testMatch: /browsers\.spec\.ts/,
+      use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      name: "iphone",
+      testMatch: /browsers\.spec\.ts/,
+      use: { ...devices["iPhone 15"] },
     },
   ],
   webServer: process.env.E2E_BASE_URL

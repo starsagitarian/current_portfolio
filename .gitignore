@@ -32,3 +32,6 @@ npm-debug.log*
 
 # original art, kept out of the repo
 /art-source/
+
+# Lighthouse CI reports
+.lighthouseci/

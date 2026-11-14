@@ -32,10 +32,14 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:visual:update": "docker run --rm --platform linux/amd64 --ipc=host --add-host=host.docker.internal:host-gateway -v \"$PWD\":/work -w /work -e E2E_BASE_URL=${VISUAL_BASE_URL:-http://host.docker.internal:3000} mcr.microsoft.com/playwright:v1.65.0-noble npx playwright test tests/e2e/visual.spec.ts --project=mobile --project=tablet --project=desktop --update-snapshots --output=/tmp/test-results",
+    "lighthouse": "lhci autorun --config=lighthouserc.cjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^9.39.5",
+    "@lhci/cli": "^0.16.1",
     "@playwright/test": "^1.65.0",
     "@types/node": "^24.19.2",
     "concurrently": "^10.0.7",
