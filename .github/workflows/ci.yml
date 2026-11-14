@@ -92,7 +92,7 @@ jobs:
           test "$(docker compose ps -a migrate --format '{{.ExitCode}}')" = 0
 
       - run: npm ci --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - name: Browser tests against the production build
         run: npm run test:e2e
         env:

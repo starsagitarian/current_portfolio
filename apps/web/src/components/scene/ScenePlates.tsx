@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BLANK,
   LANDMARKS,
@@ -15,6 +15,51 @@ import "./plates.css";
 
 /** Fired when the light is set by hand (the prototype slider): every layer must then be loaded. */
 export const SKY_MANUAL_EVENT = "sky:manual";
+
+/** The image addresses a <picture>'s sources offer for the window as it is now. */
+function offered(picture: HTMLPictureElement): string[] {
+  return [...picture.querySelectorAll("source")]
+    .filter((source) => source.media === "" || window.matchMedia(source.media).matches)
+    .flatMap((source) =>
+      source.srcset.split(",").map((entry) => entry.trim().split(/\s+/)[0] ?? ""),
+    )
+    .filter(Boolean);
+}
+
+/**
+ * Safari (WebKit) picks a <picture>'s image once, on load, and keeps it when the window is
+ * resized or a tablet is turned; a layer that was out of range at load stays blank. So on start
+ * and after each resize (once a frame at most), any layer showing something other than what its
+ * sources now offer gets a fresh copy of its image, which picks again. (Re-assigning the image's
+ * address does not make WebKit pick again; a new element does.) An image still loading is left
+ * alone. Chromium and Firefox already pick again by themselves, so for them this finds nothing.
+ */
+function useRepickOnResize(root: React.RefObject<HTMLDivElement | null>, layers: unknown) {
+  useEffect(() => {
+    const element = root.current;
+    if (element === null) return;
+    const repick = () => {
+      for (const picture of element.querySelectorAll("picture")) {
+        const img = picture.querySelector("img");
+        if (img === null || !img.complete) continue;
+        const wanted = offered(picture);
+        if (wanted.length === 0 || wanted.some((url) => img.currentSrc.endsWith(url))) continue;
+        img.replaceWith(img.cloneNode(true));
+      }
+    };
+    let frame = 0;
+    const onResize = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(repick);
+    };
+    repick();
+    window.addEventListener("resize", onResize);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [root, layers]);
+}
 
 /** Small deterministic PRNG, so the glints and stars sit in the same places on every render. */
 function random(seed: number) {
@@ -302,6 +347,8 @@ function Lamps() {
  */
 export function ScenePlates({ className = "" }: { className?: string }) {
   const [all, setAll] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useRepickOnResize(root, all);
 
   useEffect(() => {
     const onManual = () => {
@@ -314,7 +361,12 @@ export function ScenePlates({ className = "" }: { className?: string }) {
   }, []);
 
   return (
-    <div className={`plates ${className}`} data-all={all || undefined} aria-hidden="true">
+    <div
+      ref={root}
+      className={`plates ${className}`}
+      data-all={all || undefined}
+      aria-hidden="true"
+    >
       {(["day", "dusk", "night"] as const).map((name) => (
         <Layer key={`${name}-${String(all)}`} name={name} all={all} />
       ))}
