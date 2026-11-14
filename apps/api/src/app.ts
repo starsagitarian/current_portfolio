@@ -62,6 +62,7 @@ function contactService(
     {
       ipHashSalt: config.IP_HASH_SALT,
       limitPerHour: config.CONTACT_LIMIT_PER_HOUR,
+      uncheckedPerDay: config.CONTACT_UNCHECKED_PER_DAY,
       alertEmail: config.CONTACT_ALERT_EMAIL,
     },
     deps.now,

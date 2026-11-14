@@ -19,6 +19,8 @@ export class ContactMessage extends Model<
   /** Salted SHA-256 of the sender's IP: enough to rate-limit, not enough to identify. */
   declare ipHash: string;
   declare userAgent: string | null;
+  /** False when the message arrived without the bot check (no JavaScript). */
+  declare botChecked: CreationOptional<boolean>;
   declare createdAt: CreationOptional<Date>;
 }
 
@@ -31,6 +33,7 @@ export function initContactMessageModel(sequelize: Sequelize): void {
       message: { type: DataTypes.TEXT, allowNull: false },
       ipHash: { type: DataTypes.CHAR(64), allowNull: false },
       userAgent: { type: DataTypes.STRING(300), allowNull: true },
+      botChecked: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
       createdAt: { type: DataTypes.DATE, allowNull: false },
     },
     { sequelize, tableName: "contact_messages", updatedAt: false },

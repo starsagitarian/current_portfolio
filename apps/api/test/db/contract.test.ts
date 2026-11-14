@@ -146,6 +146,16 @@ describe("POST /v1/contact", () => {
     expect(res.status).toBe(429);
   });
 
+  it("303 (a plain form post, no JavaScript) matches the spec", async () => {
+    const res = await request(contactApp({ CORS_ORIGINS: "https://site.example" }))
+      .post("/v1/contact")
+      .type("form")
+      .set("Origin", "https://site.example")
+      .send({ name: "Ada", email: "ada@example.com", message: "Hello" });
+    contract.check(res, "post", "/v1/contact");
+    expect(res.status).toBe(303);
+  });
+
   it("503 matches the spec", async () => {
     const res = await post(createApp(testConfig(), { sequelize }), message);
     contract.check(res, "post", "/v1/contact");

@@ -5,12 +5,15 @@ import type { Mailer } from "../contact/mailer";
 import type { ContactMessageRepository } from "../repositories/contact-messages";
 
 const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 /** Messages are kept for 12 months, then deleted by the daily clean-up. */
 export const RETENTION_MONTHS = 12;
 
 export interface ContactSettings {
   ipHashSalt: string;
   limitPerHour: number;
+  /** Messages a day, from everyone, that may come without the bot check (no JavaScript). */
+  uncheckedPerDay: number;
   /** Where alerts go; undefined stores messages without emailing. */
   alertEmail: string | undefined;
 }
@@ -25,6 +28,8 @@ export type SubmitOutcome =
   | { kind: "ignored" }
   | { kind: "bot" }
   | { kind: "limited"; retryAfterSeconds: number }
+  /** Today's allowance of messages without the bot check is used up. */
+  | { kind: "busy"; retryAfterSeconds: number }
   | { kind: "stored"; id: string; emailed: boolean; emailError?: unknown };
 
 /** One line per field, and no line breaks inside one, so a name cannot add email headers. */
@@ -49,8 +54,12 @@ export class ContactService {
   async submit(request: ContactRequest, sender: Sender): Promise<SubmitOutcome> {
     if (request.website !== undefined && request.website.trim() !== "") return { kind: "ignored" };
 
-    // The bot check comes before the database, so automated traffic never wakes it.
-    if (!(await this.botCheck.verify(request.turnstileToken, sender.ip))) return { kind: "bot" };
+    // The bot check comes before the database, so automated traffic never wakes it. A message
+    // without a token (no JavaScript in the sender's browser) skips it, within a daily allowance.
+    const token = request.turnstileToken;
+    const botChecked = token !== undefined;
+    if (botChecked && !(await this.botCheck.verify(token, sender.ip))) return { kind: "bot" };
+    if (!botChecked && this.settings.uncheckedPerDay === 0) return { kind: "bot" };
 
     const now = this.now();
     const result = await this.repository.storeWithinLimit(
@@ -60,16 +69,27 @@ export class ContactService {
         message: request.message,
         ipHash: this.hashIp(sender.ip),
         userAgent: sender.userAgent?.slice(0, 300) ?? null,
+        botChecked,
       },
       {
         limit: this.settings.limitPerHour,
         windowStart: new Date(now.getTime() - HOUR_MS),
         windowMs: HOUR_MS,
+        unchecked: botChecked
+          ? undefined
+          : {
+              limit: this.settings.uncheckedPerDay,
+              windowStart: new Date(now.getTime() - DAY_MS),
+              windowMs: DAY_MS,
+            },
       },
     );
     if (!result.stored) {
       const seconds = Math.ceil((result.retryAt.getTime() - now.getTime()) / 1000);
-      return { kind: "limited", retryAfterSeconds: Math.max(1, seconds) };
+      const retryAfterSeconds = Math.max(1, seconds);
+      return result.limit === "sender"
+        ? { kind: "limited", retryAfterSeconds }
+        : { kind: "busy", retryAfterSeconds };
     }
 
     const { alertEmail } = this.settings;
@@ -81,9 +101,14 @@ export class ContactService {
       await this.mailer.send({
         to: alertEmail,
         replyTo: request.email,
-        subject: `Portfolio message from ${singleLine(request.name)}`,
+        subject: `${botChecked ? "" : "[No bot check] "}Portfolio message from ${singleLine(request.name)}`,
         text: [
           "A new message came in through the contact form on your portfolio.",
+          ...(botChecked
+            ? []
+            : [
+                "It came without the bot check (the sender's browser ran no JavaScript), so it may be automated: treat links in it with care.",
+              ]),
           "",
           `From: ${singleLine(request.name)} <${request.email}>`,
           `Sent: ${result.createdAt.toISOString()}`,

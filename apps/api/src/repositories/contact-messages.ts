@@ -7,12 +7,26 @@ export interface NewMessage {
   message: string;
   ipHash: string;
   userAgent: string | null;
+  /** False when the message came without the bot check. */
+  botChecked: boolean;
+}
+
+export interface StoreLimits {
+  /** Messages one sender may send since `windowStart`. */
+  limit: number;
+  windowStart: Date;
+  windowMs: number;
+  /** For a message without the bot check: how many such messages everyone may send since then. */
+  unchecked?: { limit: number; windowStart: Date; windowMs: number };
 }
 
 export type StoreResult =
   | { stored: true; id: string; createdAt: Date }
-  /** The sender reached the limit; they may send again at `retryAt`. */
-  | { stored: false; retryAt: Date };
+  /**
+   * Not stored: the sender reached their limit ("sender"), or the day's allowance of messages
+   * without the bot check is used up ("unchecked"). Sending works again at `retryAt`.
+   */
+  | { stored: false; limit: "sender" | "unchecked"; retryAt: Date };
 
 /** Writes and expires contact messages. */
 export class ContactMessageRepository {
@@ -25,9 +39,32 @@ export class ContactMessageRepository {
    */
   storeWithinLimit(
     message: NewMessage,
-    { limit, windowStart, windowMs }: { limit: number; windowStart: Date; windowMs: number },
+    { limit, windowStart, windowMs, unchecked }: StoreLimits,
   ): Promise<StoreResult> {
     return this.sequelize.transaction(async (transaction) => {
+      // The site-wide allowance first (always this lock before a sender's, so no deadlock).
+      if (unchecked !== undefined) {
+        await this.sequelize.query("SELECT pg_advisory_xact_lock(hashtextextended($key, 0))", {
+          bind: { key: "contact-unchecked" },
+          transaction,
+        });
+        const today = await ContactMessage.findAll({
+          attributes: ["createdAt"],
+          where: { botChecked: false, createdAt: { [Op.gte]: unchecked.windowStart } },
+          order: [["createdAt", "ASC"]],
+          transaction,
+        });
+        const first = today[0];
+        if (unchecked.limit === 0 || (today.length >= unchecked.limit && first !== undefined)) {
+          const from = first?.createdAt ?? unchecked.windowStart;
+          return {
+            stored: false,
+            limit: "unchecked",
+            retryAt: new Date(from.getTime() + unchecked.windowMs),
+          };
+        }
+      }
+
       await this.sequelize.query("SELECT pg_advisory_xact_lock(hashtextextended($hash, 0))", {
         bind: { hash: message.ipHash },
         transaction,
@@ -41,7 +78,11 @@ export class ContactMessageRepository {
       });
       const oldest = recent[0];
       if (recent.length >= limit && oldest !== undefined) {
-        return { stored: false, retryAt: new Date(oldest.createdAt.getTime() + windowMs) };
+        return {
+          stored: false,
+          limit: "sender",
+          retryAt: new Date(oldest.createdAt.getTime() + windowMs),
+        };
       }
 
       const created = await ContactMessage.create(message, { transaction });

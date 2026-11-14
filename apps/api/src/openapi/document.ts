@@ -239,13 +239,26 @@ function paths(): JsonObject {
         description: [
           "Takes a message from the contact form on the site. In order: the body is validated, a filled-in honeypot field is dropped silently, the Cloudflare Turnstile token is verified, the sender is held to a few messages an hour, then the message is stored and emailed to the site owner.",
           "",
+          "The site's script sends JSON. A browser without JavaScript posts the form itself (`application/x-www-form-urlencoded`, the same fields, with no token): that is answered with a 303 redirect back to the site, to `/contact/sent` or `/contact/not-sent/{reason}`. Messages without a token skip the bot check and are capped site-wide each day; the alert email flags them.",
+          "",
           `Messages are kept for 12 months. The sender's IP address is stored only as a keyed hash. Browsers may call this only from the site itself (CORS). Limits: name ${CONTACT_LIMITS.name}, email ${CONTACT_LIMITS.email}, message ${CONTACT_LIMITS.message} characters.`,
         ].join("\n"),
         requestBody: {
           required: true,
-          content: { "application/json": { schema: ref("ContactRequest") } },
+          content: {
+            "application/json": { schema: ref("ContactRequest") },
+            "application/x-www-form-urlencoded": { schema: ref("ContactRequest") },
+          },
         },
         responses: {
+          "303": {
+            description:
+              "A plain form post: back to the site, to `/contact/sent` or `/contact/not-sent/{reason}` (invalid, bot-check, limited, busy or unavailable).",
+            headers: {
+              Location: string("The page on the site that says what happened."),
+              "Cache-Control": string("Always `no-store`."),
+            },
+          },
           "202": {
             description: "Received.",
             headers: {
@@ -258,9 +271,12 @@ function paths(): JsonObject {
           "403": problem(
             "The bot check failed, or the request came from a site that is not allowed.",
           ),
-          "429": problem("Too many messages or requests from this sender.", {
-            "Retry-After": string("Seconds to wait before trying again."),
-          }),
+          "429": problem(
+            "Too many messages from this sender, or today's allowance of messages without the bot check is used up.",
+            {
+              "Retry-After": string("Seconds to wait before trying again."),
+            },
+          ),
           "503": problem(
             "The contact form is not configured, the database is unreachable or the bot check is unavailable.",
           ),

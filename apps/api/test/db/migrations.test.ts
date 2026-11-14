@@ -42,7 +42,7 @@ describe("migrations", () => {
   it("create every table on the way up", async () => {
     const applied = await createMigrator(sequelize).up();
 
-    expect(applied.map((m) => m.name)).toEqual(["0001-initial-schema"]);
+    expect(applied.map((m) => m.name)).toEqual(["0001-initial-schema", "0002-contact-bot-check"]);
     expect(await userTables()).toEqual(TABLES);
     expect(await createMigrator(sequelize).pending()).toEqual([]);
   });
@@ -64,7 +64,7 @@ describe("migrations", () => {
 
     const undone = await rollback(sequelize, { all: true });
     expect(undone).toEqual({
-      migrations: ["0001-initial-schema"],
+      migrations: ["0002-contact-bot-check", "0001-initial-schema"],
       seeders: ["0001-portfolio-content"],
     });
     expect(await createSeeder(sequelize).executed()).toEqual([]);

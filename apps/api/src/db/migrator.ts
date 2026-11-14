@@ -1,6 +1,7 @@
 import type { QueryInterface, Sequelize, Transaction } from "sequelize";
 import { SequelizeStorage, Umzug } from "umzug";
 import * as initialSchema from "./migrations/0001-initial-schema";
+import * as contactBotCheck from "./migrations/0002-contact-bot-check";
 import * as portfolioContent from "./seeders/0001-portfolio-content";
 
 export interface StepContext {
@@ -15,7 +16,10 @@ export interface Step {
 }
 
 // Listed explicitly (not globbed) so the bundled production build carries them.
-const migrations: readonly (readonly [string, Step])[] = [["0001-initial-schema", initialSchema]];
+const migrations: readonly (readonly [string, Step])[] = [
+  ["0001-initial-schema", initialSchema],
+  ["0002-contact-bot-check", contactBotCheck],
+];
 const seeders: readonly (readonly [string, Step])[] = [
   ["0001-portfolio-content", portfolioContent],
 ];

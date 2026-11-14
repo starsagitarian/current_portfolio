@@ -29,6 +29,11 @@ const EnvSchema = z.object({
   IP_HASH_SALT: z.string().min(16).optional(),
   /** Messages one sender may send in an hour. */
   CONTACT_LIMIT_PER_HOUR: z.coerce.number().int().min(1).max(100).default(5),
+  /**
+   * Messages a day, from everyone together, that may arrive without the bot check (a plain form
+   * post from a browser without JavaScript). 0 refuses them all.
+   */
+  CONTACT_UNCHECKED_PER_DAY: z.coerce.number().int().min(0).max(100).default(5),
   /** Resend API key. Without it messages are stored but no alert email is sent. */
   RESEND_API_KEY: z.string().min(1).optional(),
   /** Where alerts go. Kept in secrets only: it never appears in the repository or on the site. */

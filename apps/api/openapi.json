@@ -577,11 +577,16 @@
         "operationId": "sendMessage",
         "tags": ["Contact"],
         "summary": "Send a message",
-        "description": "Takes a message from the contact form on the site. In order: the body is validated, a filled-in honeypot field is dropped silently, the Cloudflare Turnstile token is verified, the sender is held to a few messages an hour, then the message is stored and emailed to the site owner.\n\nMessages are kept for 12 months. The sender's IP address is stored only as a keyed hash. Browsers may call this only from the site itself (CORS). Limits: name 100, email 254, message 5000 characters.",
+        "description": "Takes a message from the contact form on the site. In order: the body is validated, a filled-in honeypot field is dropped silently, the Cloudflare Turnstile token is verified, the sender is held to a few messages an hour, then the message is stored and emailed to the site owner.\n\nThe site's script sends JSON. A browser without JavaScript posts the form itself (`application/x-www-form-urlencoded`, the same fields, with no token): that is answered with a 303 redirect back to the site, to `/contact/sent` or `/contact/not-sent/{reason}`. Messages without a token skip the bot check and are capped site-wide each day; the alert email flags them.\n\nMessages are kept for 12 months. The sender's IP address is stored only as a keyed hash. Browsers may call this only from the site itself (CORS). Limits: name 100, email 254, message 5000 characters.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
               "schema": {
                 "$ref": "#/components/schemas/ContactRequest"
               }
@@ -615,6 +620,23 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ContactReceipt"
+                }
+              }
+            }
+          },
+          "303": {
+            "description": "A plain form post: back to the site, to `/contact/sent` or `/contact/not-sent/{reason}` (invalid, bot-check, limited, busy or unavailable).",
+            "headers": {
+              "Location": {
+                "description": "The page on the site that says what happened.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "description": "Always `no-store`.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -656,7 +678,7 @@
             }
           },
           "429": {
-            "description": "Too many messages or requests from this sender.",
+            "description": "Too many messages from this sender, or today's allowance of messages without the bot check is used up.",
             "headers": {
               "Cache-Control": {
                 "description": "Always `no-store`: errors are never cached.",
@@ -1254,7 +1276,7 @@
             "maxLength": 2048
           }
         },
-        "required": ["name", "email", "message", "turnstileToken"],
+        "required": ["name", "email", "message"],
         "additionalProperties": false
       },
       "ContactReceipt": {

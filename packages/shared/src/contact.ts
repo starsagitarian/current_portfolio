@@ -14,9 +14,25 @@ export const ContactRequestSchema = z.object({
    * it set is answered as if it worked, and dropped.
    */
   website: z.string().max(200).optional(),
-  /** The token from the Cloudflare Turnstile widget on the form. */
-  turnstileToken: z.string().min(1).max(2048),
+  /**
+   * The token from the Cloudflare Turnstile widget on the form. Missing when the visitor's
+   * browser runs no JavaScript: such messages skip the check and are capped site-wide each day.
+   */
+  turnstileToken: z.string().min(1).max(2048).optional(),
 });
+
+/**
+ * Where a plain HTML form post (no JavaScript) is sent back to on the site, by outcome. The API
+ * answers such posts with a 303 redirect to one of these pages.
+ */
+export const CONTACT_PAGES = {
+  sent: "/contact/sent",
+  notSent: (reason: ContactFailure) => `/contact/not-sent/${reason}`,
+} as const;
+
+/** Why a message was not sent, as the site explains it. */
+export const CONTACT_FAILURES = ["invalid", "bot-check", "limited", "busy", "unavailable"] as const;
+export type ContactFailure = (typeof CONTACT_FAILURES)[number];
 
 /** The answer to an accepted message. */
 export const ContactReceiptSchema = z.object({

@@ -214,6 +214,136 @@ describe("POST /v1/contact", () => {
   });
 });
 
+/** The message as a browser without JavaScript sends it: no bot-check token. */
+const withoutToken = { name: message.name, email: message.email, message: message.message };
+
+describe("messages without the bot check (no JavaScript)", () => {
+  it("are stored, marked, and flagged in the alert email", async () => {
+    const { sent, mailer } = recordingMailer();
+    await request(contactApp({ mailer })).post("/v1/contact").send(withoutToken).expect(202);
+
+    const [row] = await ContactMessage.findAll();
+    expect(row?.botChecked).toBe(false);
+    expect(sent[0]?.subject).toBe("[No bot check] Portfolio message from Ada Lovelace");
+    expect(sent[0]?.text).toContain("without the bot check");
+  });
+
+  it("are capped site-wide each day, while checked messages carry on", async () => {
+    const app = contactApp({}, { CONTACT_UNCHECKED_PER_DAY: "2" });
+    const send = (ip: string, body: object) =>
+      request(app).post("/v1/contact").set("X-Forwarded-For", ip).send(body);
+
+    expect((await send("192.0.2.1", withoutToken)).status).toBe(202);
+    expect((await send("192.0.2.2", withoutToken)).status).toBe(202);
+
+    // a third, from anyone, waits for the day to roll over
+    const busy = await send("192.0.2.3", withoutToken);
+    expect(busy.status).toBe(429);
+    expect(ProblemSchema.parse(busy.body).detail).toContain("without the bot check");
+    expect(Number(busy.headers["retry-after"])).toBeGreaterThan(86_000);
+
+    expect((await send("192.0.2.3", message)).status).toBe(202);
+    expect(await ContactMessage.count({ where: { botChecked: false } })).toBe(2);
+  });
+
+  it("hold the cap under parallel requests", async () => {
+    const app = contactApp({}, { CONTACT_UNCHECKED_PER_DAY: "3" });
+    const results = await Promise.all(
+      Array.from({ length: 8 }, (_, i) =>
+        request(app)
+          .post("/v1/contact")
+          .set("X-Forwarded-For", `192.0.2.${20 + i}`)
+          .send(withoutToken),
+      ),
+    );
+    expect(results.filter((res) => res.status === 202)).toHaveLength(3);
+    expect(await ContactMessage.count()).toBe(3);
+  });
+
+  it("are refused when the daily allowance is 0", async () => {
+    const app = contactApp({}, { CONTACT_UNCHECKED_PER_DAY: "0" });
+    await request(app).post("/v1/contact").send(withoutToken).expect(403);
+    expect(await ContactMessage.count()).toBe(0);
+  });
+});
+
+describe("plain form posts (no JavaScript)", () => {
+  /** A plain form post, from the site unless another origin (or none, null) is given. */
+  const form = (app = contactApp(), origin: string | null = SITE) => {
+    const req = request(app).post("/v1/contact").type("form");
+    return origin === null ? req : req.set("Origin", origin);
+  };
+  const fields = { name: "Ada Lovelace", email: " ada@example.com ", message: "Hello there." };
+
+  it("store the message and send the browser back to the site's thank-you page", async () => {
+    const res = await form().send(fields).expect(303);
+
+    expect(res.headers.location).toBe(`${SITE}/contact/sent`);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    const [row] = await ContactMessage.findAll();
+    expect(row).toMatchObject({ email: "ada@example.com", botChecked: false });
+  });
+
+  it("go back to the preview they came from", async () => {
+    const preview = "https://starsagitarian-abc123-starsagitarian.vercel.app";
+    const res = await form(contactApp(), preview).send(fields).expect(303);
+    expect(res.headers.location).toBe(`${preview}/contact/sent`);
+  });
+
+  it("use the widget's token when the page had JavaScript after all", async () => {
+    await form()
+      .send({ ...fields, "cf-turnstile-response": "pass" })
+      .expect(303);
+    expect((await ContactMessage.findOne())?.botChecked).toBe(true);
+  });
+
+  it("explain each refusal on its own page", async () => {
+    const back = (res: request.Response) => {
+      expect(res.status).toBe(303);
+      return res.headers.location;
+    };
+
+    expect(back(await form().send({ ...fields, email: "not an email" }))).toBe(
+      `${SITE}/contact/not-sent/invalid`,
+    );
+    expect(back(await form(contactApp({}, { CONTACT_UNCHECKED_PER_DAY: "0" })).send(fields))).toBe(
+      `${SITE}/contact/not-sent/bot-check`,
+    );
+    expect(back(await form().send({ ...fields, "cf-turnstile-response": "wrong" }))).toBe(
+      `${SITE}/contact/not-sent/bot-check`,
+    );
+    expect(
+      back(await form(createApp(testConfig({ CORS_ORIGINS: SITE }), { sequelize })).send(fields)),
+    ).toBe(`${SITE}/contact/not-sent/unavailable`);
+
+    const once = contactApp({}, { CONTACT_UNCHECKED_PER_DAY: "1" });
+    await form(once).send(fields).expect(303);
+    expect(back(await form(once).send(fields))).toBe(`${SITE}/contact/not-sent/busy`);
+    expect(await ContactMessage.count()).toBe(1);
+  });
+
+  it("answer a filled-in honeypot like a success, and drop it", async () => {
+    const res = await form()
+      .send({ ...fields, website: "https://spam.example" })
+      .expect(303);
+    expect(res.headers.location).toBe(`${SITE}/contact/sent`);
+    expect(await ContactMessage.count()).toBe(0);
+  });
+
+  it("are refused from other sites, or with no site at all", async () => {
+    await form(contactApp(), "https://evil.example").send(fields).expect(403);
+    await form(contactApp(), null).send(fields).expect(403);
+    expect(await ContactMessage.count()).toBe(0);
+  });
+
+  it("refuse repeated fields", async () => {
+    const res = await form()
+      .send("name=Ada&name=Eve&email=ada%40example.com&message=Hi")
+      .expect(303);
+    expect(res.headers.location).toBe(`${SITE}/contact/not-sent/invalid`);
+  });
+});
+
 describe("CORS on the contact form", () => {
   const preflight = (origin: string) =>
     request(contactApp())
