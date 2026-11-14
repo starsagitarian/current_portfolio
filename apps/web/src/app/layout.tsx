@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
 import { TabMotionPause } from "@/motion/TabMotionPause";
+import { RegisterServiceWorker } from "@/pwa/RegisterServiceWorker";
 import { SkyFollower } from "@/sky/SkyFollower";
 import { SKY_INIT_SCRIPT } from "@/sky/sky";
 import "./globals.css";
@@ -14,10 +15,15 @@ const lexend = Lexend({
 export const metadata: Metadata = {
   title: { default: "Baiju Joseph · Software & Cloud Engineer", template: "%s · Baiju Joseph" },
   description: "Portfolio of Baiju Joseph, software and cloud engineer in London.",
+  // Added to an iPhone's home screen, it opens on its own, the painting running up under the
+  // status bar (the header keeps clear of it with the safe-area insets).
+  appleWebApp: { capable: true, title: "Baiju Joseph", statusBarStyle: "black-translucent" },
 };
 
 // The browser's own bars take the colour of the sky at the top of each painting.
 export const viewport: Viewport = {
+  // edge to edge on phones with a notch or rounded corners; the safe-area insets keep text clear
+  viewportFit: "cover",
   themeColor: [
     { media: "(max-width: 767.98px)", color: "#58aefb" },
     { media: "(min-width: 768px) and (max-width: 1279.98px)", color: "#9283b1" },
@@ -36,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <SkyFollower />
         <TabMotionPause />
+        <RegisterServiceWorker />
         {children}
       </body>
     </html>

@@ -235,6 +235,15 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
   Cloudflare Turnstile invisibly, and sends, fails or thanks you without leaving the page; errors
   are announced and focus moves to the first field to fix. Baiju waves from the foot of the page
   on phones and tablets and from beside the form on desktops.
+- **Add to Home Screen.** A web app manifest ([`app/manifest.ts`](apps/web/src/app/manifest.ts))
+  and icons built from the logo (`npm run icons -w @starsagitarian/web`, including a maskable one
+  for Android) let the site be installed from the browser and open full-screen; on an iPhone the
+  painting runs up under the status bar. A hand-written service worker
+  ([`public/sw.js`](apps/web/public/sw.js), production builds only) opens visited pages offline
+  and shows an offline page for the rest; it leaves the API and every POST alone, and each deploy
+  installs a fresh one that clears the old caches. Safari has no install prompt, so from the
+  second page of a visit a small card says how (Share, then Add to Home Screen); on Android it
+  offers the browser's own install. Dismissed, it stays away for 60 days.
 - **Layout.** Every page sits in one shell ([`apps/web/src/components/shell`](apps/web/src/components/shell)):
   a skip link, the painted scene, a header and the content. Phones and tablets get a menu (a modal
   dialog, so focus stays in it and Escape closes it) and a tab bar; desktops get the sections in

@@ -194,6 +194,7 @@ test.describe("text contrast against the real painting", () => {
     "/contact",
     "/contact/sent",
     "/contact/not-sent/busy",
+    "/offline",
   ]) {
     test(`${path}, at every 40 px`, async ({ browser }) => {
       const context = await browser.newContext({ reducedMotion: "reduce" });
@@ -282,6 +283,27 @@ test.describe("text contrast against the real painting", () => {
       failures.push(...(await measure(page)).map((p) => `sent ${width} px: ${p}`));
     }
     await context.close();
+    expect(failures, failures.slice(0, 12).join("\n")).toEqual([]);
+  });
+
+  test("the Home Screen hint, at phone and tablet widths", async ({ browser }) => {
+    const failures: string[] = [];
+    for (const width of [320, 390, 430, 768, 1024]) {
+      const context = await browser.newContext({
+        reducedMotion: "reduce",
+        viewport: { width, height: 860 },
+        hasTouch: true,
+        isMobile: true,
+        userAgent:
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",
+      });
+      const page = await context.newPage();
+      await page.goto("/");
+      await page.goto("/resume");
+      await expect(page.getByRole("complementary", { name: "Add to Home Screen" })).toBeVisible();
+      failures.push(...(await measure(page)).map((p) => `hint ${width} px: ${p}`));
+      await context.close();
+    }
     expect(failures, failures.slice(0, 12).join("\n")).toEqual([]);
   });
 

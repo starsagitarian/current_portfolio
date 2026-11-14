@@ -12,6 +12,9 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
+    // The production build installs a service worker; tests that do not exercise it keep it out,
+    // so every request is the page's own (pwa.spec.ts allows it).
+    serviceWorkers: "block",
   },
   // The three widths the design is built around: phone, tablet, desktop.
   projects: [

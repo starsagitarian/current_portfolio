@@ -45,8 +45,10 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  /* clear of the header above and the tab bar below */
-  padding: 92px 16px 112px;
+  /* clear of the header above (which grows by the status bar's height on a notched phone at
+     home-screen size) and the tab bar below */
+  padding: calc(80px + max(12px, env(safe-area-inset-top))) max(16px, env(safe-area-inset-right))
+    112px max(16px, env(safe-area-inset-left));
 }
 .site-main:focus {
   outline: none;
