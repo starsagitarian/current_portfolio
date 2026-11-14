@@ -1,14 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { cacheLife } from "next/cache";
 import { ImageResponse } from "next/og";
-import sharp from "sharp";
 import { site } from "@starsagitarian/shared";
 
 /** The size every link preview uses (LinkedIn, WhatsApp, Slack, X...). */
 export const SHARE_SIZE = { width: 1200, height: 630 };
 export const SHARE_TYPE = "image/jpeg";
 
-const fromApp = (file: string) => readFile(path.join(process.cwd(), file));
 const dataUrl = (bytes: Buffer, type: string) => `data:${type};base64,${bytes.toString("base64")}`;
 
 interface Assets {
@@ -20,22 +19,20 @@ interface Assets {
 }
 let assets: Promise<Assets> | undefined;
 
-/** The night painting, the standing figure, the emblem and the two weights of Lexend, once. */
+/**
+ * The night painting and Baiju standing (prepared by `npm run icons`, see scripts/icons.mjs),
+ * the emblem and the two weights of Lexend, read once.
+ */
 function loadAssets(): Promise<Assets> {
   assets ??= (async () => {
+    // each path spelled out, so the build traces these five files and not the whole project
+    const app = process.cwd();
     const [painting, figure, emblem, medium, bold] = await Promise.all([
-      fromApp("public/art/scene/night-1920.webp").then((bytes) =>
-        sharp(bytes)
-          .resize(SHARE_SIZE.width, SHARE_SIZE.height, { fit: "cover" })
-          .jpeg()
-          .toBuffer(),
-      ),
-      fromApp("public/art/character-standing-579.webp").then((bytes) =>
-        sharp(bytes).resize({ height: 620 }).png().toBuffer(),
-      ),
-      fromApp("public/icons/icon-192.png"),
-      fromApp("assets/fonts/lexend-latin-500-normal.woff"),
-      fromApp("assets/fonts/lexend-latin-700-normal.woff"),
+      readFile(path.join(app, "assets", "share", "painting.jpg")),
+      readFile(path.join(app, "assets", "share", "figure.png")),
+      readFile(path.join(app, "public", "icons", "icon-192.png")),
+      readFile(path.join(app, "assets", "fonts", "lexend-latin-500-normal.woff")),
+      readFile(path.join(app, "assets", "fonts", "lexend-latin-700-normal.woff")),
     ]);
     return {
       painting: dataUrl(painting, "image/jpeg"),
@@ -48,6 +45,17 @@ function loadAssets(): Promise<Assets> {
   return assets;
 }
 
+/**
+ * sharp, where it is installed: at build, where every card is drawn. The server image leaves it
+ * out (it is the largest library there), so a card drawn later, for a project added after a
+ * deploy, is sent as the PNG it was rendered as.
+ */
+const loadSharp = () =>
+  import("sharp").then(
+    (module) => module.default,
+    () => null,
+  );
+
 /** Shortens text to whole words, with an ellipsis, so it fits the card. */
 const fit = (text: string, max: number) =>
   text.length <= max ? text : `${text.slice(0, text.lastIndexOf(" ", max - 1))}…`;
@@ -57,15 +65,13 @@ const fit = (text: string, max: number) =>
  * the page's kicker, title and a line about it. Rendered once at build, then saved as a JPEG of
  * well under 300 KB, which WhatsApp needs before it shows an image at all.
  */
-export async function shareCard({
-  kicker,
-  title,
-  lede,
-}: {
-  kicker?: string | undefined;
-  title: string;
-  lede: string;
-}): Promise<Response> {
+async function drawCard(
+  kicker: string | undefined,
+  title: string,
+  lede: string,
+): Promise<{ bytes: Uint8Array; type: string }> {
+  "use cache";
+  cacheLife("max");
   const a = await loadAssets();
   const png = new ImageResponse(
     <div
@@ -158,10 +164,31 @@ export async function shareCard({
       ],
     },
   );
+  const sharp = await loadSharp();
+  if (sharp === null) {
+    return { bytes: new Uint8Array(await png.arrayBuffer()), type: "image/png" };
+  }
   const jpeg = await sharp(Buffer.from(await png.arrayBuffer()))
     .jpeg({ quality: 80, mozjpeg: true })
     .toBuffer();
-  return new Response(new Uint8Array(jpeg), {
-    headers: { "Content-Type": SHARE_TYPE, "Cache-Control": "public, max-age=3600" },
+  return { bytes: new Uint8Array(jpeg), type: SHARE_TYPE };
+}
+
+/**
+ * A link preview as a response. Drawn once (cached, so the build prepares every card ahead) and
+ * saved as a JPEG of well under 300 KB, which WhatsApp needs before it shows an image at all.
+ */
+export async function shareCard({
+  kicker,
+  title,
+  lede,
+}: {
+  kicker?: string | undefined;
+  title: string;
+  lede: string;
+}): Promise<Response> {
+  const { bytes, type } = await drawCard(kicker, title, lede);
+  return new Response(bytes as BodyInit, {
+    headers: { "Content-Type": type, "Cache-Control": "public, max-age=3600" },
   });
 }

@@ -1,6 +1,6 @@
 /**
  * Builds the home-screen icons in public/icons from the logo (design/brand), the emblem without
- * its wordmark on the logo's own cream:
+ * its wordmark on the logo's own cream (and, at the end, the link previews' two pictures):
  *
  *   icon-192.png, icon-512.png   the emblem filling most of the square (purpose "any")
  *   icon-maskable-512.png        more cream around it, so Android's circle and squircle masks
@@ -75,3 +75,20 @@ async function icon(file, size, share) {
 await icon("icon-192.png", 192, 0.82);
 await icon("icon-512.png", 512, 0.82);
 await icon("icon-maskable-512.png", 512, 0.62);
+
+/*
+ * The two pictures the link previews are drawn with (src/seo/share-card.tsx), prepared here so
+ * drawing a card needs no image library at run time: the night painting at the card's size, and
+ * Baiju standing, at the height the card shows him.
+ */
+const SHARE = path.join(import.meta.dirname, "../assets/share");
+const ART = path.join(import.meta.dirname, "../public/art");
+await sharp(path.join(ART, "scene/night-1920.webp"))
+  .resize(1200, 630, { fit: "cover" })
+  .jpeg({ quality: 88, mozjpeg: true })
+  .toFile(path.join(SHARE, "painting.jpg"));
+await sharp(path.join(ART, "character-standing-579.webp"))
+  .resize({ height: 620 })
+  .png({ compressionLevel: 9 })
+  .toFile(path.join(SHARE, "figure.png"));
+console.info("Wrote assets/share/painting.jpg and figure.png");

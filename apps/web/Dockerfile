@@ -20,7 +20,10 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY tsconfig.base.json ./
 COPY packages/shared packages/shared
 COPY apps/web apps/web
-RUN npm run build --workspace @starsagitarian/web
+# sharp and its image library (about 20 MB) are needed at build only, to save the link previews as
+# JPEGs; the site uses no image optimisation at run time (see src/seo/share-card.tsx).
+RUN npm run build --workspace @starsagitarian/web \
+ && rm -rf apps/web/.next/standalone/node_modules/sharp apps/web/.next/standalone/node_modules/@img
 
 # Runtime: plain Alpine plus the node binary. The official Node image also carries npm, Yarn
 # and Corepack, which a running server never needs (about 40 MB).
