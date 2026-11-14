@@ -117,6 +117,7 @@ environment variables. The repository needs:
 | `NEON_PROJECT_ID`      | Variable           | Neon project ID; deploys are skipped until set                                  |
 | `VERCEL_TEAM_ID`       | Secret or variable | The Vercel team to deploy into (`team_…`)                                       |
 | `TURNSTILE_SECRET_KEY` | Secret             | Cloudflare Turnstile secret for production (previews use Cloudflare's test key) |
+| `TURNSTILE_SITE_KEY`   | Secret or variable | Cloudflare Turnstile site key for production (public by design)                 |
 | `RESEND_API_KEY`       | Secret             | Resend API key for contact alerts                                               |
 | `CONTACT_ALERT_EMAIL`  | Secret             | Where contact alerts go; never in the repository or on the site                 |
 
@@ -177,7 +178,14 @@ live in one place ([`apps/api/src`](apps/api/src)). Response shapes are Zod sche
   (counted in PostgreSQL under a lock, so it holds across serverless instances), stored, then
   emailed to the owner through Resend. IP addresses are stored only as an HMAC keyed with
   `IP_HASH_SALT`. Only the site and its previews may post from a browser (`CORS_ORIGINS`); public
-  reads allow any origin. Logs carry the message id, never its content or the sender's details.
+  reads allow any origin (the deploy sets `CORS_ORIGINS` to the site, or to its previews). Logs
+  carry the message id, never its content or the sender's details.
+- **Without JavaScript.** The form is an ordinary HTML form posting to the API, which answers
+  with a 303 redirect back to the site: `/contact/sent`, or `/contact/not-sent/{reason}`. Such
+  posts cannot carry a Turnstile token, so they skip the check but are capped site-wide at
+  `CONTACT_UNCHECKED_PER_DAY` (5) a day, counted under their own lock, and the alert email is
+  flagged "[No bot check]". A bot that skips the check can therefore never flood the inbox or the
+  email quota; `0` turns the path off.
 - **Retention.** Vercel Cron calls `GET /cron/purge-contact-messages` daily with `CRON_SECRET`,
   deleting messages older than 12 months. Preview databases are copies of production, so deploys
   clear their contact messages.
@@ -223,6 +231,10 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
   address and the grid at once, with no trip to the server; back and forward step through it.
   React's `<ViewTransition>` morphs a project's drawing from its tile to its page, and the tiles
   glide as the filter changes. Without JavaScript, every project is still listed and linked.
+- **Contact.** The form checks each field as you type (the same rules as the API), runs
+  Cloudflare Turnstile invisibly, and sends, fails or thanks you without leaving the page; errors
+  are announced and focus moves to the first field to fix. Baiju waves from the foot of the page
+  on phones and tablets and from beside the form on desktops.
 - **Layout.** Every page sits in one shell ([`apps/web/src/components/shell`](apps/web/src/components/shell)):
   a skip link, the painted scene, a header and the content. Phones and tablets get a menu (a modal
   dialog, so focus stays in it and Escape closes it) and a tab bar; desktops get the sections in

@@ -81,6 +81,14 @@ jobs:
         run: |
           npx tsx scripts/hosting.ts vercel-project "$API_PROJECT" api
           npx tsx scripts/hosting.ts vercel-env "$API_PROJECT" "$TARGET" DATABASE_URL
+          # The sites whose browsers may send contact messages: the public site, or this team's
+          # preview deployments of it.
+          if [ "$TARGET" = production ]; then
+            export CORS_ORIGINS="https://$WEB_PROJECT.vercel.app"
+          else
+            export CORS_ORIGINS="https://$WEB_PROJECT-*-$WEB_PROJECT.vercel.app"
+          fi
+          npx tsx scripts/hosting.ts vercel-env "$API_PROJECT" "$TARGET" CORS_ORIGINS
           # Random secrets, created once and then kept.
           npx tsx scripts/hosting.ts vercel-secret "$API_PROJECT" "$TARGET" IP_HASH_SALT
           if [ "$TARGET" = production ]; then
@@ -112,6 +120,8 @@ jobs:
         run: npx tsx scripts/hosting.ts vercel-project "$WEB_PROJECT" web
       - name: Deploy the web app
         id: web
+        env:
+          PRODUCTION_TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY || vars.TURNSTILE_SITE_KEY }}
         run: |
           # The site reads from the API deployed with it: the public domain in production, this
           # run's own API deployment on previews. Needed while building and while serving.
@@ -120,9 +130,17 @@ jobs:
           else
             api_url="${{ steps.api.outputs.url }}"
           fi
+          # The contact form's bot check: the real site key in production, Cloudflare's
+          # always-pass test key on previews (it pairs with the test secret the API gets there).
+          if [ "${{ inputs.environment }}" = production ] && [ -n "$PRODUCTION_TURNSTILE_SITE_KEY" ]; then
+            site_key="$PRODUCTION_TURNSTILE_SITE_KEY"
+          else
+            site_key=1x00000000000000000000AA
+          fi
           url=$(npx --yes "$VERCEL_CLI" deploy --project "$WEB_PROJECT" --archive=tgz \
             --build-env HUSKY=0 --build-env NEXT_TELEMETRY_DISABLED=1 \
             --build-env API_URL="$api_url" --env API_URL="$api_url" \
+            --build-env TURNSTILE_SITE_KEY="$site_key" \
             ${{ steps.vercel.outputs.flags }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
@@ -153,6 +171,14 @@ jobs:
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$web/resume" | grep -q "Experience"
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 -o /dev/null -w "site cv %{http_code} %{content_type}\n" \
             "$web/resume/cv.pdf" | tee /dev/stderr | grep -q "application/pdf"
+          # the contact form posts to this API, and a plain form post (no JavaScript) from the
+          # site comes back as a redirect to the site; an empty one is refused, so nothing is stored
+          curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$web/contact" | grep -q "action=\"$api/v1/contact\""
+          back=$(curl -sS -o /dev/null -w "%{http_code} %{redirect_url}" -X POST -H "Origin: $web" \
+            --data "name=" "$api/v1/contact")
+          echo "form post: $back"
+          if [ "$CONTACT_ON" = true ]; then reason=invalid; else reason=unavailable; fi
+          [ "$back" = "303 $web/contact/not-sent/$reason" ]
           # the projects, filtered in the address, and one project's own page
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$web/projects?tag=data" | grep -q "Lightning observation"
           curl -fsS --retry 5 --retry-all-errors --retry-delay 3 "$web/projects/lightning-observation" | grep -q "About the project"

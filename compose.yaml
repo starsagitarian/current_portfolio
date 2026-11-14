@@ -71,7 +71,9 @@ services:
       dockerfile: apps/web/Dockerfile
     image: starsagitarian-web:local
     environment:
-      # The server reaches the API over the compose network.
+      # The server reaches the API over the compose network. (The contact form, sent by the
+      # browser, uses the address built into the page: http://localhost:4000, the API's port
+      # here, with Cloudflare's always-pass test site key.)
       API_URL: http://api:4000
     ports:
       - "${WEB_PORT:-3000}:3000"
