@@ -299,6 +299,8 @@ test.describe("text contrast against the real painting", () => {
       });
       const page = await context.newPage();
       await page.goto("/");
+      // the hint counts a page once the page is running: wait for that before moving on
+      await page.waitForFunction(() => sessionStorage.getItem("install-hint-views") === "1");
       await page.goto("/resume");
       await expect(page.getByRole("complementary", { name: "Add to Home Screen" })).toBeVisible();
       failures.push(...(await measure(page)).map((p) => `hint ${width} px: ${p}`));
