@@ -4,15 +4,24 @@
  *   migrate     apply pending migrations
  *   rollback    undo the latest migration (or all with --all)
  *   status      list applied and pending migrations and seeders
- *   seed        load portfolio content
+ *   seed        load portfolio content (once; the seeder is then recorded as applied)
+ *   sync-content    make the content exactly the seed's, in one transaction (what deploys run)
  *   unseed      remove portfolio content (contact messages are kept)
  *   reset       unseed, roll back everything, migrate, seed (local use only)
  *   clear-messages  delete every contact message (preview databases copied from production)
  */
 import { loadConfig } from "../config";
-import { ContactMessage, connectDatabase, createMigrator, createSeeder, rollback } from "./index";
+import {
+  ContactMessage,
+  connectDatabase,
+  createMigrator,
+  createSeeder,
+  rollback,
+  syncContent,
+} from "./index";
 
-const USAGE = "Usage: db <migrate|rollback [--all]|status|seed|unseed|reset|clear-messages>";
+const USAGE =
+  "Usage: db <migrate|rollback [--all]|status|seed|sync-content|unseed|reset|clear-messages>";
 
 async function main(argv: string[]): Promise<void> {
   const [command, flag] = argv;
@@ -43,6 +52,9 @@ async function main(argv: string[]): Promise<void> {
         break;
       case "seed":
         console.info(`Seeded: ${names(await seeder.up())}`);
+        break;
+      case "sync-content":
+        console.info(`Synced content: ${(await syncContent(sequelize)).join(", ")}`);
         break;
       case "unseed":
         console.info(`Unseeded: ${names(await seeder.down({ to: 0 }))}`);

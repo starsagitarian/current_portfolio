@@ -56,6 +56,30 @@ export function createSeeder(sequelize: Sequelize) {
 }
 
 /**
+ * Brings the content (profile, projects, résumé) to exactly what the seed says, whatever is
+ * there now: what a deploy runs, so edits to the seed content reach the live site. A seeder runs
+ * only once, so `seed` alone would never apply them.
+ *
+ * Everything happens in one transaction: readers see the old content or the new, never an empty
+ * table (the clean-up's table locks hold them back for the moment it takes). Contact messages
+ * are not content and are left alone. Afterwards every seeder is recorded as applied, so a later
+ * `seed` does nothing. Returns the seeders' names.
+ */
+export async function syncContent(sequelize: Sequelize): Promise<string[]> {
+  await sequelize.transaction(async (transaction) => {
+    const context = { sequelize, queryInterface: sequelize.getQueryInterface(), transaction };
+    for (const [, step] of [...seeders].reverse()) await step.down(context);
+    for (const [, step] of seeders) await step.up(context);
+  });
+  const storage = new SequelizeStorage({ sequelize, tableName: "schema_seeds" });
+  const executed = new Set(await storage.executed());
+  for (const [name] of seeders) {
+    if (!executed.has(name)) await storage.logMigration({ name });
+  }
+  return seeders.map(([name]) => name);
+}
+
+/**
  * Rolls back the latest migration, or all of them.
  * Seeds are undone first whenever the rollback empties the schema; otherwise
  * `schema_seeds` would still say "seeded" and a later seed run would do nothing.

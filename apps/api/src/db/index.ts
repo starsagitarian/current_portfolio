@@ -3,7 +3,7 @@ import type { Config } from "../config";
 import { initModels } from "./models";
 import { createSequelize } from "./sequelize";
 
-export { createMigrator, createSeeder, rollback } from "./migrator";
+export { createMigrator, createSeeder, rollback, syncContent } from "./migrator";
 export * from "./models";
 
 /** Creates the database connection and binds the models, or returns undefined when no URL is set. */

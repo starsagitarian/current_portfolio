@@ -11,6 +11,7 @@ import {
   Project,
   ProjectTechnology,
   Skill,
+  syncContent,
   Tag,
   Technology,
 } from "../../src/db";
@@ -137,5 +138,46 @@ describe("publishing guard", () => {
     );
     const found = [...phraseHashes(dump)].filter((hash) => BLOCKED_PHRASE_HASHES.has(hash));
     expect(found).toEqual([]);
+  });
+});
+
+describe("syncing the content (what a deploy runs)", () => {
+  it("brings edited content back to the seed's, and keeps contact messages", async () => {
+    await Project.update({ title: "Edited by hand" }, { where: { slug: "remedic" } });
+    await Project.destroy({ where: { slug: "saas-data-services" } });
+    const messagesBefore = await ContactMessage.count();
+    const kept = await ContactMessage.create({
+      name: "Ada",
+      email: "ada@example.com",
+      message: "Hello",
+      ipHash: "a".repeat(64),
+      userAgent: null,
+    });
+
+    expect(await syncContent(sequelize)).toEqual(["0001-portfolio-content"]);
+
+    expect((await Project.findOne({ where: { slug: "remedic" } }))?.title).toBe(
+      content.projects.find((p) => p.slug === "remedic")?.title,
+    );
+    expect(await Project.count()).toBe(content.projects.length);
+    expect(await ContactMessage.count()).toBe(messagesBefore + 1);
+    await kept.destroy();
+  });
+
+  it("works on an empty database, and records the seeder so a later seed does nothing", async () => {
+    await createSeeder(sequelize).down({ to: 0 });
+    expect(await Project.count()).toBe(0);
+
+    await syncContent(sequelize);
+    expect(await Project.count()).toBe(content.projects.length);
+    expect((await createSeeder(sequelize).executed()).map((s) => s.name)).toEqual([
+      "0001-portfolio-content",
+    ]);
+    expect(await createSeeder(sequelize).up()).toEqual([]);
+
+    // and again: the same content, no duplicates
+    await syncContent(sequelize);
+    expect(await Project.count()).toBe(content.projects.length);
+    expect(await Profile.count()).toBe(1);
   });
 });

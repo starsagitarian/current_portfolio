@@ -35,13 +35,14 @@ services:
       retries: 12
     restart: unless-stopped
 
-  # One-off job: applies pending migrations and seeds, then exits. Safe to re-run.
+  # One-off job: applies pending migrations and syncs the content to the seed, then exits. Safe to
+  # re-run.
   migrate:
     <<: *hardening
     # Same image as the api service, which builds it.
     image: starsagitarian-api:local
     pull_policy: never
-    command: ["sh", "-c", "node dist/db-cli.js migrate && node dist/db-cli.js seed"]
+    command: ["sh", "-c", "node dist/db-cli.js migrate && node dist/db-cli.js sync-content"]
     environment: *database-env
     read_only: true
     depends_on:

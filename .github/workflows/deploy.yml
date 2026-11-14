@@ -55,13 +55,15 @@ jobs:
       - name: Neon branch
         id: neon
         run: npx tsx scripts/hosting.ts neon-branch "${{ inputs.environment }}"
-      - name: Migrate and seed
+      # The content (profile, projects, résumé) is made exactly the seed's on every deploy, in one
+      # transaction, so edits to apps/api/src/db/seeders/content.ts go live. See RUNBOOK.md.
+      - name: Migrate and sync the content
         env:
           DATABASE_URL: ${{ steps.neon.outputs.direct_url }}
           DATABASE_SSL: "true"
         run: |
           npm run db:migrate
-          npm run db:seed
+          npm run db:sync-content
       # The preview branch is a copy of production: keep visitors' messages out of it.
       - name: Clear contact messages from the preview database
         if: inputs.environment == 'preview'
