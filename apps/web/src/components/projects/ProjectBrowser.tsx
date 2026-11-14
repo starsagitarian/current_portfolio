@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { addTransitionType, startTransition, useState, type MouseEvent } from "react";
+import { addTransitionType, startTransition, useEffect, useState, type MouseEvent } from "react";
 import type { ProjectSummary, Tag } from "@starsagitarian/shared";
 import { ProjectGrid } from "./ProjectTile";
 
@@ -39,6 +39,22 @@ export function ProjectBrowser({
     setLastUrlTag(fromUrl);
     setTag(fromUrl);
   }
+
+  // Back and forward also read the address itself: after a reload, the router does not always
+  // pass on a step back into entries the earlier page made, so the grid could keep a stale filter.
+  useEffect(() => {
+    const onPopState = () => {
+      const next = new URLSearchParams(window.location.search).get("tag");
+      const known = next !== null && tags.some((t) => t.slug === next) ? next : null;
+      startTransition(() => {
+        setTag(known);
+      });
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [tags]);
 
   function choose(event: MouseEvent<HTMLAnchorElement>, next: string | null) {
     if (isModified(event)) return;
