@@ -233,3 +233,21 @@ test("Baiju waves: below the form on phones and tablets, beside it on desktops",
     expect(box.y).toBeGreaterThan(card.y + card.height);
   }
 });
+
+test("asks Cloudflare nothing until the visitor starts on the form", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "one browser covers it");
+  const calls: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().startsWith("https://challenges.cloudflare.com/")) calls.push(request.url());
+  });
+  await page.route("https://challenges.cloudflare.com/**", (route) =>
+    route.fulfill({ contentType: "text/javascript", body: FAKE_TURNSTILE }),
+  );
+  await page.goto("/contact");
+  await expect(page.locator("form.contact-form")).toHaveAttribute("novalidate", "");
+  await page.waitForTimeout(1500);
+  expect(calls).toEqual([]);
+
+  await field(page, "Name").focus();
+  await expect.poll(() => calls.length).toBeGreaterThan(0);
+});

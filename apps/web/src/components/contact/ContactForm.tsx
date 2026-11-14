@@ -68,6 +68,13 @@ export function ContactForm({ endpoint, siteKey }: { endpoint: string; siteKey: 
     () => false,
   );
   const [scriptReady, setScriptReady] = useState(false);
+  // Cloudflare's check starts when the visitor starts on the form (a focus or a tap in it), not
+  // when the page opens: it costs the page nothing until then, and Cloudflare sees no visit that
+  // never writes. Typing a message leaves it ample time; Send waits for it if need be.
+  const [engaged, setEngaged] = useState(false);
+  const engage = () => {
+    setEngaged(true);
+  };
   const [values, setValues] = useState(EMPTY);
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
   const [serverErrors, setServerErrors] = useState<FieldErrors>({});
@@ -259,12 +266,16 @@ export function ContactForm({ endpoint, siteKey }: { endpoint: string; siteKey: 
         void submit(event);
       }}
       aria-describedby={status.kind === "failed" ? `${id}-failed` : undefined}
+      onFocusCapture={engage}
+      onPointerDownCapture={engage}
     >
-      <Script
-        src={TURNSTILE_SCRIPT}
-        strategy="afterInteractive"
-        onReady={() => setScriptReady(true)}
-      />
+      {engaged && (
+        <Script
+          src={TURNSTILE_SCRIPT}
+          strategy="afterInteractive"
+          onReady={() => setScriptReady(true)}
+        />
+      )}
 
       <TextField
         id={`${id}-name`}
