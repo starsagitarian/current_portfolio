@@ -41,6 +41,8 @@ WORKDIR /app
 # Standalone output: a minimal server plus only the node_modules files it traced.
 COPY --from=build /repo/apps/web/.next/standalone ./
 COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
+# The public folder (artwork, icons, the service worker) is not part of the standalone output.
+COPY --from=build /repo/apps/web/public ./apps/web/public
 # Next.js writes its render cache under .next; that folder alone belongs to the runtime user.
 RUN chown -R node:node /app/apps/web/.next
 USER node
