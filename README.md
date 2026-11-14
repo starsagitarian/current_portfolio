@@ -8,6 +8,8 @@ TypeScript REST API over PostgreSQL.
 
 > Status: under construction. The live site will be at **https://starsagitarian.vercel.app**.
 
+Keeping it running (content updates, rollbacks, recovery, secrets): [RUNBOOK.md](RUNBOOK.md).
+
 ## Architecture
 
 | Part              | What it is                                                 |
