@@ -512,3 +512,44 @@
     transform: translateY(18px);
   }
 }
+
+/* ---- the footer line at the end of the longer pages */
+.site-footer {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: flex-start;
+  gap: 4px 10px;
+  width: fit-content;
+  margin: clamp(48px, 8vh, 80px) 0 0 clamp(0px, 2vw, 40px);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+/* the same feathered pool of shade as the page titles: the line often sits over the lit river */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset: -60% -18%;
+  z-index: -1;
+  background: radial-gradient(
+    closest-side,
+    var(--scrim) 0%,
+    var(--scrim) 55%,
+    color-mix(in oklch, var(--scrim) 40%, transparent) 78%,
+    transparent
+  );
+  pointer-events: none;
+}
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, currentColor 40%, transparent);
+  text-underline-offset: 4px;
+}
+.site-footer a:hover {
+  text-decoration-color: currentColor;
+}

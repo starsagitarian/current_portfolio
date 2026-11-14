@@ -244,6 +244,16 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
   installs a fresh one that clears the old caches. Safari has no install prompt, so from the
   second page of a visit a small card says how (Share, then Add to Home Screen); on Android it
   offers the browser's own install. Dismissed, it stays away for 60 days.
+- **Search and sharing.** Every page states its title, description and canonical address once
+  ([`src/seo`](apps/web/src/seo)). Link previews are drawn at build with `next/og` on the night
+  painting (Lexend from [`assets/fonts`](apps/web/assets/fonts), Baiju standing on the right),
+  then saved as JPEGs of about 110 KB, since WhatsApp shows no picture over about 300 KB: one for
+  home, each section and each project. Pages carry schema.org data (a person, the website, a
+  profile page, a collection of projects, each project), and `sitemap.xml` and `robots.txt` keep
+  the working pages (prototype, offline, form outcomes) out of search.
+- **Credits.** [`/credits`](https://starsagitarian.vercel.app/credits) and
+  [`CREDITS.md`](CREDITS.md) list the artwork, typeface, icons, software and services, with their
+  licences; the longer pages end with a line linking to them and to this repository.
 - **Layout.** Every page sits in one shell ([`apps/web/src/components/shell`](apps/web/src/components/shell)):
   a skip link, the painted scene, a header and the content. Phones and tablets get a menu (a modal
   dialog, so focus stays in it and Escape closes it) and a tab bar; desktops get the sections in

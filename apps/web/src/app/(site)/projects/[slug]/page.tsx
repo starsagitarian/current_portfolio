@@ -3,11 +3,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewTransition } from "react";
 import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
-import type { ProjectSummary } from "@starsagitarian/shared";
+import { site, type ProjectSummary } from "@starsagitarian/shared";
 import { ProjectArt } from "@/components/projects/ProjectArt";
 import { artTransitionName } from "@/components/projects/ProjectTile";
 import { GitHubIcon } from "@/components/shell/BrandIcons";
+import { SiteFooter } from "@/components/shell/SiteFooter";
 import { getProject, getProjects } from "@/lib/projects";
+import { JsonLd } from "@/seo/JsonLd";
+import { pageMetadata } from "@/seo/metadata";
+import { PERSON_ID } from "@/seo/schema";
 import "@/components/page/page.css";
 import "@/components/projects/projects.css";
 
@@ -25,7 +29,12 @@ export async function generateMetadata({
 }: PageProps<"/projects/[slug]">): Promise<Metadata> {
   const project = await getProject((await params).slug);
   if (project === null) return { title: "Project not found" };
-  return { title: project.title, description: project.summary };
+  return pageMetadata({
+    title: project.title,
+    description: project.summary,
+    path: `/projects/${project.slug}`,
+    type: "article",
+  });
 }
 
 /** The projects either side of this one, going round, for the links at the foot of the page. */
@@ -49,6 +58,21 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
 
   return (
     <article className="project-page">
+      <JsonLd
+        data={{
+          "@type": project.repoUrl === null ? "CreativeWork" : "SoftwareSourceCode",
+          name: project.title,
+          description: project.summary,
+          url: `${site.url}/projects/${project.slug}`,
+          author: { "@id": PERSON_ID },
+          datePublished: project.publishedAt,
+          keywords: project.technologies.join(", "),
+          ...(project.repoUrl !== null && { codeRepository: project.repoUrl }),
+          ...(project.organisation !== null && {
+            sourceOrganization: { "@type": "Organization", name: project.organisation },
+          }),
+        }}
+      />
       <Link href="/projects" className="back-link veil">
         <ArrowLeft aria-hidden="true" size={18} />
         All projects
@@ -158,6 +182,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           </Link>
         </nav>
       )}
+      <SiteFooter />
     </article>
   );
 }

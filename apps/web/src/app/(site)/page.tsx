@@ -4,7 +4,15 @@ import { site } from "@starsagitarian/shared";
 import { Character } from "@/components/character/Character";
 import { GitHubIcon, LinkedInIcon } from "@/components/shell/BrandIcons";
 import { SECTIONS } from "@/components/shell/nav";
+import { pageMetadata } from "@/seo/metadata";
+import { JsonLd } from "@/seo/JsonLd";
+import { person } from "@/seo/schema";
 import "./home.css";
+
+export const metadata = pageMetadata({
+  description: `${site.name}, ${site.title.toLowerCase()} in London. ${site.tagline}`,
+  path: "/",
+});
 
 /*
  * Home, after the mockups. Phones: the character, centre stage, in daylight. Tablets: the
@@ -15,6 +23,21 @@ export default function Home() {
   const [first, ...others] = SECTIONS;
   return (
     <div className="home">
+      <JsonLd
+        data={{
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": `${site.url}/#website`,
+              name: site.name,
+              url: site.url,
+              inLanguage: "en-GB",
+              publisher: { "@id": `${site.url}/#person` },
+            },
+            person(),
+          ],
+        }}
+      />
       {/* the character stands on the promenade, fixed to the scene rather than the page */}
       <div className="home-stage" aria-hidden="true">
         <Character pose="standing" />

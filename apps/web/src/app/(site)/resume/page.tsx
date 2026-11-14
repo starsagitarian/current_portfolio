@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { site } from "@starsagitarian/shared";
 import {
   Award,
   Briefcase,
@@ -10,17 +11,23 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Avatar } from "@/components/character/Avatar";
+import { SiteFooter } from "@/components/shell/SiteFooter";
 import { SceneFigure } from "@/components/character/SceneFigure";
 import { formatMonth } from "@/lib/dates";
 import { getProfile } from "@/lib/profile";
+import { JsonLd } from "@/seo/JsonLd";
+import { pageMetadata } from "@/seo/metadata";
+import { person } from "@/seo/schema";
 import "@/components/page/page.css";
 import "./resume.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Résumé",
   description:
     "Experience, skills, certifications and education of Baiju Joseph, software and cloud engineer in London.",
-};
+  path: "/resume",
+  type: "profile",
+});
 
 function Section({
   icon: Icon,
@@ -57,6 +64,21 @@ export default async function ResumePage() {
 
   return (
     <div className="resume">
+      <JsonLd
+        data={{
+          "@type": "ProfilePage",
+          url: `${site.url}/resume`,
+          mainEntity: person({
+            description: profile.summary,
+            knowsAbout: profile.skills.flatMap((group) => group.skills),
+            hasCredential: profile.certifications.map((cert) => ({
+              "@type": "EducationalOccupationalCredential",
+              name: cert.name,
+              recognizedBy: { "@type": "Organization", name: cert.issuer },
+            })),
+          }),
+        }}
+      />
       {/* on wide screens, Baiju stands on the promenade in the clear space beside the reading */}
       <SceneFigure media="(min-width: 1600px)" className="page-figure" />
       <div className="page-intro resume-intro bare rise">
@@ -149,6 +171,7 @@ export default async function ResumePage() {
           </Section>
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }

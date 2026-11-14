@@ -1,0 +1,39 @@
+.credits {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 6vh, 56px);
+  width: 100%;
+  max-width: 860px;
+}
+.credits-list {
+  margin-inline: clamp(0px, 2vw, 40px);
+}
+.credits-list section + section {
+  margin-top: clamp(28px, 4vh, 40px);
+}
+.credits-title {
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.credit {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.credit dt {
+  font-weight: 700;
+  line-height: 1.45;
+}
+.credit dd {
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.credit-licence {
+  color: var(--ink-muted);
+}
+.credit a {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, currentColor 40%, transparent);
+  text-underline-offset: 3px;
+}

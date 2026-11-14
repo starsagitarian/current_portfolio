@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
+import { site } from "@starsagitarian/shared";
 import { TabMotionPause } from "@/motion/TabMotionPause";
 import { RegisterServiceWorker } from "@/pwa/RegisterServiceWorker";
+import { OPEN_GRAPH_BASE } from "@/seo/metadata";
 import { SkyFollower } from "@/sky/SkyFollower";
 import { SKY_INIT_SCRIPT } from "@/sky/sky";
 import "./globals.css";
@@ -13,8 +15,15 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
+  // absolute addresses (canonical links, link previews) always name the public site
+  metadataBase: new URL(site.url),
   title: { default: "Baiju Joseph · Software & Cloud Engineer", template: "%s · Baiju Joseph" },
   description: "Portfolio of Baiju Joseph, software and cloud engineer in London.",
+  applicationName: site.name,
+  authors: [{ name: site.name, url: site.url }],
+  creator: site.name,
+  openGraph: { ...OPEN_GRAPH_BASE, url: "/" },
+  twitter: { card: "summary_large_image" },
   // Added to an iPhone's home screen, it opens on its own, the painting running up under the
   // status bar (the header keeps clear of it with the safe-area insets).
   appleWebApp: { capable: true, title: "Baiju Joseph", statusBarStyle: "black-translucent" },

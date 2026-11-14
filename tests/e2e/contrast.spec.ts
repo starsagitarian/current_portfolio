@@ -195,6 +195,7 @@ test.describe("text contrast against the real painting", () => {
     "/contact/sent",
     "/contact/not-sent/busy",
     "/offline",
+    "/credits",
   ]) {
     test(`${path}, at every 40 px`, async ({ browser }) => {
       const context = await browser.newContext({ reducedMotion: "reduce" });

@@ -124,6 +124,15 @@ export function SiteHeader() {
             <LinkedInIcon />
             LinkedIn
           </a>
+          <Link
+            href="/credits"
+            className="profile-link"
+            onClick={() => {
+              dialog.current?.close();
+            }}
+          >
+            Credits
+          </Link>
         </div>
       </dialog>
     </header>

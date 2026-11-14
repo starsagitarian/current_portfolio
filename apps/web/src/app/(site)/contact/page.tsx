@@ -4,11 +4,13 @@ import { ContactForm } from "@/components/contact/ContactForm";
 import { PageIntro } from "@/components/page/PageIntro";
 import { GitHubIcon, LinkedInIcon } from "@/components/shell/BrandIcons";
 import { contactEndpoint, turnstileSiteKey } from "@/lib/contact";
+import { pageMetadata } from "@/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Contact",
   description: "Write to Baiju Joseph about a role, a project or a question.",
-};
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (
