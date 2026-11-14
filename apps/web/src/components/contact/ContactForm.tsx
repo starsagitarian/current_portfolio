@@ -3,7 +3,7 @@
 import Script from "next/script";
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { AlertCircle, ArrowRight, Check, LoaderCircle, Send } from "lucide-react";
-import { CONTACT_LIMITS, ProblemSchema } from "@starsagitarian/shared";
+import { CONTACT_LIMITS } from "@starsagitarian/shared";
 import { fieldErrorsFromDetail, validate, type Field, type FieldErrors } from "@/lib/contact";
 
 /** The part of Cloudflare Turnstile's browser API the form uses. */
@@ -186,8 +186,15 @@ export function ContactForm({ endpoint, siteKey }: { endpoint: string; siteKey: 
       return;
     }
 
-    const problem = ProblemSchema.safeParse(await res.json().catch(() => null));
-    const detail = problem.success ? (problem.data.detail ?? "") : "";
+    // the problem's detail, read by hand: a schema library would cost more than the whole form
+    const problem: unknown = await res.json().catch(() => null);
+    const detail =
+      typeof problem === "object" &&
+      problem !== null &&
+      "detail" in problem &&
+      typeof problem.detail === "string"
+        ? problem.detail
+        : "";
     if (res.status === 400) {
       const fields = fieldErrorsFromDetail(detail);
       setServerErrors(fields);

@@ -1,7 +1,5 @@
 import { z } from "zod";
-
-/** Field limits, matching the database columns. */
-export const CONTACT_LIMITS = { name: 100, email: 254, message: 5000 } as const;
+import { CONTACT_LIMITS } from "./contact-rules";
 
 /** What the contact form sends to `POST /v1/contact`. */
 export const ContactRequestSchema = z.object({
@@ -20,19 +18,6 @@ export const ContactRequestSchema = z.object({
    */
   turnstileToken: z.string().min(1).max(2048).optional(),
 });
-
-/**
- * Where a plain HTML form post (no JavaScript) is sent back to on the site, by outcome. The API
- * answers such posts with a 303 redirect to one of these pages.
- */
-export const CONTACT_PAGES = {
-  sent: "/contact/sent",
-  notSent: (reason: ContactFailure) => `/contact/not-sent/${reason}`,
-} as const;
-
-/** Why a message was not sent, as the site explains it. */
-export const CONTACT_FAILURES = ["invalid", "bot-check", "limited", "busy", "unavailable"] as const;
-export type ContactFailure = (typeof CONTACT_FAILURES)[number];
 
 /** The answer to an accepted message. */
 export const ContactReceiptSchema = z.object({
