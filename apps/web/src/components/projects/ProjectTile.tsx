@@ -3,6 +3,7 @@ import { ViewTransition } from "react";
 import { ArrowRight, Star } from "lucide-react";
 import type { ProjectSummary } from "@starsagitarian/shared";
 import { ProjectArt } from "./ProjectArt";
+import { TileGrid, type ProjectItem } from "./TileGrid";
 
 /** The name a project's drawing carries from its tile to the top of its own page. */
 export const artTransitionName = (slug: string) => `project-art-${slug}`;
@@ -44,25 +45,16 @@ export function ProjectTile({ project }: { project: ProjectSummary }) {
   );
 }
 
-/** The tiles in a grid; each one keeps its identity as the filter adds and removes others. */
+/** The projects as the grid takes them: each tile drawn here, on the server. */
+export function projectItems(projects: ProjectSummary[]): ProjectItem[] {
+  return projects.map((project) => ({
+    slug: project.slug,
+    tags: project.tags.map((tag) => tag.slug),
+    tile: <ProjectTile project={project} />,
+  }));
+}
+
+/** Every project, unfiltered (until the filter is known, and without JavaScript). */
 export function ProjectGrid({ projects }: { projects: ProjectSummary[] }) {
-  return (
-    <ul className="project-grid">
-      {projects.map((project) => (
-        <ViewTransition
-          key={project.slug}
-          name={`project-tile-${project.slug}`}
-          enter={{ filter: "tile-in", default: "none" }}
-          exit={{ filter: "tile-out", default: "none" }}
-          update={{ filter: "tile-move", default: "none" }}
-          share={{ filter: "tile-move", default: "none" }}
-          default="none"
-        >
-          <li className="project-cell">
-            <ProjectTile project={project} />
-          </li>
-        </ViewTransition>
-      ))}
-    </ul>
-  );
+  return <TileGrid items={projectItems(projects)} />;
 }

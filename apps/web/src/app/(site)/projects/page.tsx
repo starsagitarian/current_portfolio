@@ -6,7 +6,7 @@ import { SceneFigure } from "@/components/character/SceneFigure";
 import { PageIntro } from "@/components/page/PageIntro";
 import { SiteFooter } from "@/components/shell/SiteFooter";
 import { ProjectBrowser } from "@/components/projects/ProjectBrowser";
-import { ProjectGrid } from "@/components/projects/ProjectTile";
+import { ProjectGrid, projectItems } from "@/components/projects/ProjectTile";
 import { getProjects, tagsInUse } from "@/lib/projects";
 import { JsonLd } from "@/seo/JsonLd";
 import { pageMetadata } from "@/seo/metadata";
@@ -52,7 +52,7 @@ async function ProjectsJsonLd() {
 async function FilteredProjects() {
   await connection();
   const { projects } = await getProjects();
-  return <ProjectBrowser projects={projects} tags={tagsInUse(projects)} />;
+  return <ProjectBrowser items={projectItems(projects)} tags={tagsInUse(projects)} />;
 }
 
 /** Until the filter is known (and without JavaScript), every project, unfiltered. */

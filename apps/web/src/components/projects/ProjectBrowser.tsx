@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useState, type MouseEvent } from "react";
-import type { ProjectSummary, Tag } from "@starsagitarian/shared";
-import { ProjectGrid } from "./ProjectTile";
+import type { Tag } from "@starsagitarian/shared";
+import { TileGrid, type ProjectItem } from "./TileGrid";
 
 type TagCount = Tag & { count: number };
 
@@ -21,13 +21,7 @@ const isModified = (event: MouseEvent) =>
  * address and the grid at once, with no trip to the server: tiles that stay glide to their new
  * places, the rest fade in and out. The chips are ordinary links, so they also work as links.
  */
-export function ProjectBrowser({
-  projects,
-  tags,
-}: {
-  projects: ProjectSummary[];
-  tags: TagCount[];
-}) {
+export function ProjectBrowser({ items, tags }: { items: ProjectItem[]; tags: TagCount[] }) {
   const known = (value: string | null) =>
     value !== null && tags.some((tag) => tag.slug === value) ? value : null;
   const fromUrl = known(useSearchParams().get("tag"));
@@ -67,10 +61,9 @@ export function ProjectBrowser({
     window.history.pushState(null, "", hrefFor(next));
   }
 
-  const shown =
-    tag === null ? projects : projects.filter((p) => p.tags.some((t) => t.slug === tag));
+  const shown = tag === null ? items : items.filter((item) => item.tags.includes(tag));
   const label = tags.find((t) => t.slug === tag)?.label;
-  const options = [{ slug: null, label: "All", count: projects.length }, ...tags];
+  const options = [{ slug: null, label: "All", count: items.length }, ...tags];
 
   return (
     <>
@@ -101,7 +94,7 @@ export function ProjectBrowser({
           ? `Showing all ${shown.length} projects`
           : `Showing ${shown.length} ${label.toLowerCase()} projects`}
       </p>
-      <ProjectGrid projects={shown} />
+      <TileGrid items={shown} />
     </>
   );
 }
