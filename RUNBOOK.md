@@ -5,15 +5,16 @@ to do when something goes wrong. Everything here runs on free plans.
 
 ## What runs where
 
-| Part               | Where                                                                | Notes                                                                        |
-| ------------------ | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Site               | Vercel project `starsagitarian`                                      | Next.js; pages built at deploy, refreshed hourly                             |
-| API                | Vercel project `starsagitarian-api` (starsagitarian-api.vercel.app)  | Express; `/health?deep=1` checks the database; documentation at `/docs`      |
-| Database           | Neon, branch `production` (and `preview`, a copy, for pull requests) | PostgreSQL 17                                                                |
-| Builds and deploys | GitHub Actions (`.github/workflows`)                                 | Every pull request: tests, then a preview. Every merge to `main`: production |
-| Contact form       | Cloudflare Turnstile (bot check), Resend (alert emails)              | Messages are stored first, emailed second                                    |
-| Old address        | GitHub Pages, repository `starsagitarian.github.io`                  | Redirects to the site, keeping the path (source: `deploy/github-pages`)      |
-| Daily clean-up     | Vercel Cron, 03:17 UTC                                               | Deletes contact messages older than 12 months                                |
+| Part               | Where                                                                              | Notes                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Site               | Vercel project `starsagitarian`                                                    | Next.js; pages built at deploy, refreshed hourly                             |
+| API                | Vercel project `starsagitarian-api` (starsagitarian-api.vercel.app)                | Express; `/health?deep=1` checks the database; documentation at `/docs`      |
+| Database           | Neon, branch `production` (and `preview`, a copy, for pull requests)               | PostgreSQL 17                                                                |
+| Builds and deploys | GitHub Actions (`.github/workflows`)                                               | Every pull request: tests, then a preview. Every merge to `main`: production |
+| Contact form       | Cloudflare Turnstile (bot check), Resend (alert emails)                            | Messages are stored first, emailed second                                    |
+| Old address        | GitHub Pages, repository `starsagitarian.github.io`                                | Redirects to the site, keeping the path (source: `deploy/github-pages`)      |
+| Daily clean-up     | Vercel Cron, 03:17 UTC                                                             | Deletes contact messages older than 12 months                                |
+| Visitor statistics | Vercel Web Analytics and Speed Insights (site project → Analytics, Speed Insights) | No cookies; switched on once in Vercel, loaded only on Vercel                |
 
 Secrets live in two places only: the repository's GitHub secrets (used by the deploy workflow)
 and the Vercel projects' environment variables. Never in the repository.
@@ -62,6 +63,9 @@ the new pictures with the change: `npm run test:visual:update`
 - Each deploy ends with a smoke test of the live site; its summary (GitHub → Actions → the run)
   lists the addresses.
 - Each pull request's CI summary shows Lighthouse scores and timings for the main pages.
+- Visitors: Vercel → `starsagitarian` → **Analytics** (pages, where visitors come from, devices) and
+  **Speed Insights** (real visitors' loading and responsiveness, Interaction to Next Paint
+  included). Both start counting once switched on there (Enable), and count nothing locally.
 - Logs: Vercel → project → Logs. The API logs a line per request, never message contents or
   visitors' details.
 

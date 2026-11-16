@@ -256,6 +256,10 @@ smooth blends in between ([`apps/web/src/sky`](apps/web/src/sky)).
 - **Credits.** [`/credits`](https://starsagitarian.vercel.app/credits) and
   [`CREDITS.md`](CREDITS.md) list the artwork, typeface, icons, software and services, with their
   licences; the longer pages end with a line linking to them and to this repository.
+- **Visitor statistics.** Vercel Web Analytics and Speed Insights
+  ([`src/analytics`](apps/web/src/analytics)): pages, referrers and devices, and real visitors'
+  loading and Interaction to Next Paint. No cookies and nothing that identifies a visitor, so no
+  consent banner. Loaded only in builds on Vercel.
 - **Quality budgets.** CI runs the production build through:
   - Lighthouse on a mid-range phone on 4G: performance, accessibility, best practices and SEO
     at least 95, Largest Contentful Paint under 2.5 s, layout shift under 0.05, blocking time

@@ -43,10 +43,11 @@ The full list of packages, with their licences, is in `package-lock.json`.
 
 ## Services
 
-| What                              | By                                                                     | Plan                 |
-| --------------------------------- | ---------------------------------------------------------------------- | -------------------- |
-| Hosting                           | [Vercel](https://vercel.com)                                           | Free                 |
-| Database                          | [Neon](https://neon.com)                                               | Free                 |
-| Bot check on the contact form     | [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) | Free                 |
-| Contact alerts by email           | [Resend](https://resend.com)                                           | Free                 |
-| Code, builds and container images | [GitHub](https://github.com)                                           | Free for public code |
+| What                                                               | By                                                                           | Plan                 |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------- | -------------------- |
+| Hosting                                                            | [Vercel](https://vercel.com)                                                 | Free                 |
+| Visitor statistics (no cookies, nothing that identifies a visitor) | [Vercel Web Analytics and Speed Insights](https://vercel.com/docs/analytics) | Free                 |
+| Database                                                           | [Neon](https://neon.com)                                                     | Free                 |
+| Bot check on the contact form                                      | [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/)       | Free                 |
+| Contact alerts by email                                            | [Resend](https://resend.com)                                                 | Free                 |
+| Code, builds and container images                                  | [GitHub](https://github.com)                                                 | Free for public code |

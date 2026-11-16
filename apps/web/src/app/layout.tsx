@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
 import { site } from "@starsagitarian/shared";
+import { VisitorStats } from "@/analytics/VisitorStats";
 import { TabMotionPause } from "@/motion/TabMotionPause";
 import { RegisterServiceWorker } from "@/pwa/RegisterServiceWorker";
 import { OPEN_GRAPH_BASE } from "@/seo/metadata";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SkyFollower />
         <TabMotionPause />
         <RegisterServiceWorker />
+        <VisitorStats />
         {children}
       </body>
     </html>

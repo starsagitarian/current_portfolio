@@ -107,6 +107,11 @@ const SECTIONS: { title: string; credits: Credit[] }[] = [
     title: "Services",
     credits: [
       { what: "Hosting", who: a("https://vercel.com", "Vercel"), licence: "Free plan" },
+      {
+        what: "Visitor statistics, with no cookies and nothing that identifies a visitor",
+        who: a("https://vercel.com/docs/analytics", "Vercel Web Analytics and Speed Insights"),
+        licence: "Free plan",
+      },
       { what: "Database", who: a("https://neon.com", "Neon"), licence: "Free plan" },
       {
         what: "Bot check on the contact form",
