@@ -25,7 +25,8 @@ module.exports = {
   ci: {
     collect: {
       url: PAGES.map((path) => `${base}${path}`),
-      numberOfRuns: 3,
+      // five runs a page: the median of five is steady on a shared CI runner
+      numberOfRuns: 5,
       settings: {
         chromeFlags: "--no-sandbox --headless=new",
         throttlingMethod: "simulate",
